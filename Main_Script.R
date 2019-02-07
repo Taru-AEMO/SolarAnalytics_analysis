@@ -5,19 +5,19 @@ require("ggplot2")
 require("reshape2")
 
 #Set Working Directory - have pulled this out as it will change with each data set.
-folder <- "20170215"
+folder <- "qld_4551"
 
 setwd("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis")
 
 #Input the file name of each of the data sets
-Actual_Data_file <- "data_4551_2017_02_15.csv"
+Actual_Data_file <- "data_4551_2017_03_12.csv"
 
 Site_details_file <- "site_details_4551.csv"
 
-Circuit_details_file <- "circuit_details_4551.csv"
+Circuit_details_file <- "circuit_details_4551_updated.csv"
 
 
-EventTime <- "2017-02-15 10:34:25"
+EventTime <- "2017-03-12 13:27:32"
 
 
 #Run through each Process

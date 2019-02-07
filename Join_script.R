@@ -1,12 +1,20 @@
 ####JOIN_SCRIPT.R
 
 #README: This script is designed to join the Solar Analytics Data Sets together.
-setwd(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/",folder))
+setwd(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/input/",folder))
 
 
 ##Read in the file, format the parameters appropriately 
-actual_data1 <- read.csv(Actual_Data_file, header=TRUE, stringsAsFactors = FALSE) %>% 
-  mutate(ts = ymd_hms(t_stamp)) %>% 
+actual_data1 <- read.csv(Actual_Data_file, header=TRUE, stringsAsFactors = FALSE)
+
+if(any(names(actual_data1) == "t_stamp")){
+  colnames(actual_data1)[colnames(actual_data1)=="t_stamp"] <- "tstamp"
+} else if(any(names(actual_data1) == "utc_tstamp")){
+  colnames(actual_data1)[colnames(actual_data1)=="utc_tstamp"] <- "tstamp"
+} else ("Cannot find time stamp column name in csv")
+
+actual_data1 <- actual_data1%>%
+  mutate(ts = ymd_hms(tstamp))%>%
   mutate(ts = with_tz(ts,"Australia/Brisbane")) 
 
 site_details <-  read.csv(Site_details_file, header=TRUE, stringsAsFactors = FALSE) %>% 
@@ -36,7 +44,8 @@ full_data_set <- left_join(actual_data_join, inverter_details_unique, by="site_i
 print("Please check that all of these connection types have been appropriately accounted for:")
 print(unique(full_data_set$con_type))
 
-load.list <- c("load_air_conditioner", "ac_load_net", "load_other", "battery_storage")
+load.list <- c("load_air_conditioner", "ac_load_net", "load_other", "battery_storage",
+               "load_pool","load_hot_water","load_stove","load_lighting")
 print("Loads currently includes:")
 print(paste(load.list))
 load_data_set <- filter(full_data_set, con_type %in% load.list)
