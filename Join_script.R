@@ -1,7 +1,7 @@
 ####JOIN_SCRIPT.R
 
 #README: This script is designed to join the Solar Analytics Data Sets together.
-setwd(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics/",folder))
+setwd(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/",folder))
 
 
 ##Read in the file, format the parameters appropriately 

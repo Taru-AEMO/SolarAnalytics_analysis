@@ -43,3 +43,6 @@ test_data/*
 
 #Workbook Files
 *.xlsx
+
+# Word Files
+*.docx

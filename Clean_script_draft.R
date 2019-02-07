@@ -5,7 +5,7 @@
 
 #Read in PV Script or suggest re-running Join Script
 
-setwd(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics/",folder))
+setwd(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/",folder))
 
 ##Find and Read in PV File
 pv.file.name <- list.files(pattern="_PVData.csv")
