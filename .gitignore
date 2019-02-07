@@ -43,3 +43,9 @@ test_data/*
 
 #Workbook Files
 *.xlsx
+
+#Input Files
+Inputs/*
+
+#Output Files
+Outputs/*
