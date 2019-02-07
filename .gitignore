@@ -49,3 +49,10 @@ test_data/*
 
 # Picture Files
 *.jpeg
+
+#Input Files
+input/*
+
+#Output Files
+output/*
+
