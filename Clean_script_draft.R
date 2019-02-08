@@ -51,7 +51,7 @@ temp.duration.lost <- anti_join(temp.duration, temp.duration.keep,  by = c("c_id
 
 if(nrow(temp.duration.lost)>0) {
   P1 = ggplot(temp.duration.lost, aes(ts, energy_polarity))+
-        geom_line()+
+        geom_point()+
         facet_wrap(~c_id)+
         ggtitle("List of Systems that have been removed due to Sampling Duration")
 
@@ -86,7 +86,7 @@ temp.unclean <- left_join(temp.unclean_p0, temp.clean_duration, by="c_id")
 if(length(unique(temp.unclean$c_id))>1){
  P2a = ggplot(temp.unclean, aes(ts, power_kW))+
     geom_line()+
-    facet_wrap(~c_id)+
+    facet_wrap(~c_id, scales = "free_y")+
     ggtitle("List of Systems that have been removed from the data set as there is negative or low data")
   ggsave(paste0(substr(pv.file.name, 1,15),"_Removed_Negative",".jpeg"), plot=P2a, device="jpeg")
     
@@ -125,7 +125,7 @@ temp.unclean_2 <- left_join(temp.unclean_2_list, temp.clean_duration, by="c_id")
 
 if(nrow(temp.unclean_2)>0) {
  P3 = ggplot(temp.unclean_2, aes(ts, power_kW))+
-      geom_line()+
+      geom_point()+
       facet_wrap(~c_id)+
       ggtitle("List of Systems that have been removed from the data set as there is data outside of daylight hours")
 
@@ -158,8 +158,8 @@ if (as.numeric(temp.file.duration$Avg_duration, units="secs")==60){
 temp.unclean_3 <- left_join(temp.unclean_rows, temp.clean_duration, by="c_id")
 
 if(nrow(temp.unclean_3)>0) {
-P4 = ggplot(filter(temp.unclean_3,ts>=(EventTime-minutes(5)) & ts<=(EventTime+minutes(5))) , aes(ts, power_kW))+
-  geom_line()+
+P4 = ggplot(filter(temp.unclean_3,ts>=(EventTime-minutes(1)) & ts<=(EventTime+minutes(2))) , aes(ts, power_kW))+
+  geom_point()+
   facet_wrap(~c_id)+
   ggtitle("List of Systems that have been removed from the data set as there too many or not enough data points during the event")
 
@@ -197,8 +197,11 @@ if (length(unique(temp.clean_3$c_id))>25){
     P5c = ggplot(temp.filter.time, aes(ts, power_kW))+
       geom_line()+
       facet_wrap(~c_id, scales = "free_y")+
-      ggtitle(paste("List of all systems after data has been cleaned", i, "of", numberOutputs, "Zoom"))
-    
+      ggtitle(paste("List of all systems after data has been cleaned", i, "of", numberOutputs, "Zoom"))+
+      geom_vline(xintercept = EventTime, linetype="dashed")
+      # geom_vline(xintercept = ymd_hms(EventTime2, tz="Australia/Brisbane"), linetype="dashed")+
+      # geom_vline(xintercept = ymd_hms(EventTime3, tz="Australia/Brisbane"), linetype="dashed")
+      
     ggsave(paste0(substr(pv.file.name, 1,15),"_Cleaned_Datapoints",i,"of",numberOutputs,"Zoom",".jpeg"), plot=P5c, device="jpeg")
     
   }
