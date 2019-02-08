@@ -56,3 +56,6 @@ input/*
 #Output Files
 output/*
 
+#Main file
+Main_Script.R
+

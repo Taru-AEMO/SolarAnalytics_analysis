@@ -3,6 +3,7 @@ require("tidyr")
 require("lubridate")
 require("ggplot2")
 require("reshape2")
+require("installr")
 
 #Set Working Directory - have pulled this out as it will change with each data set.
 folder <- "qld_4701"
