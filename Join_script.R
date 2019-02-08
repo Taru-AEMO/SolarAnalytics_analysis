@@ -48,7 +48,7 @@ setwd(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/",folde
 print("Please check that all of these connection types have been appropriately accounted for:")
 print(unique(full_data_set$con_type))
 
-load.list <- c("load_air_conditioner", "ac_load_net", "load_other", "battery_storage",
+load.list <- c("load_air_conditioner", "ac_load_net", "load_other", 
                "load_pool","load_hot_water","load_stove","load_lighting")
 print("Loads currently includes:")
 print(paste(load.list))
@@ -64,5 +64,13 @@ print(paste(pv.list))
 pv_data_set <- filter(full_data_set, con_type %in% pv.list)
 
 write.csv(pv_data_set, paste0(file.name, "_PVData.csv"))
+
+
+battery.list <- c("battery_storage")
+print("Battery sites currently includes:")
+print(paste(battery.list))
+pv_data_set <- filter(full_data_set, con_type %in% battery.list)
+
+write.csv(pv_data_set, paste0(file.name, "_BatteryData.csv"))
 
 rm(list=c("actual_data_join", "actual_data1", "circuit_details", "inverter_details_unique", "site_details"))

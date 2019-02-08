@@ -5,59 +5,117 @@
 
 #Read in PV Script or suggest re-running Join Script
 
-setwd(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/input/",folder))
+setwd(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/",folder))
 
 ##Find and Read in PV File
 pv.file.name <- list.files(pattern="_PVData.csv")
-pv_data_set <- read.csv(pv.file.name, header=TRUE, stringsAsFactors = FALSE) %>% 
-  mutate(ts = ymd_hms(ts)) %>% 
-  mutate(ts = with_tz(ts,"Australia/Brisbane")) 
 
-## set to output directory
-setwd(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/",folder))
+if(exists("pv_data_set")){
+  pv_data_set <- as.data.frame(pv_data_set)
+  
+  print("Using current PV Data File")
+  
+} else if(!is.empty(pv.file.name)){
+  pv_data_set <- read.csv(pv.file.name, header=TRUE, stringsAsFactors = FALSE) %>% 
+    mutate(ts = ymd_hms(ts)) %>% 
+    mutate(ts = with_tz(ts,"Australia/Brisbane")) 
+  
+  print("Opening PV CSV file in folder")
+} else("Please run Join_Script.R there does not seem to be a PV File")
+
+
+#####Filter PV File based on Duration Data (NOTE there are some cases where this has already been calculated/provided  - working below assumes it does not)
+temp.duration <- pv_data_set %>% 
+  arrange(.,c_id, ts) %>% 
+  mutate(duration = lead(ts)- ts) %>% 
+  na.omit(duration) %>% 
+  filter(duration>0) %>% 
+  group_by(c_id) %>% 
+  summarise(Avg_duration=mean(duration))  
+
+temp.file.duration <- temp.duration %>% 
+  mutate(Avg_duration=round(Avg_duration, digits=0)) %>% 
+  group_by(Avg_duration) %>% 
+  summarise(count=n()) %>% 
+  filter(count==max(count)) %>% 
+  .[,c(1)] 
+
+temp.duration.keep <- filter(temp.duration, Avg_duration<= (as.numeric(temp.file.duration$Avg_duration, units="secs") + seconds(8)) & Avg_duration>=(as.numeric(temp.file.duration$Avg_duration, units="secs") - seconds(8)))
+
+temp.clean_duration <- left_join(temp.duration.keep, pv_data_set, by="c_id")
+
+temp.duration.lost <- anti_join(temp.duration, temp.duration.keep,  by = c("c_id", "Avg_duration")) %>% 
+  left_join(pv_data_set, by="c_id")
+
+if(nrow(temp.duration.lost)>0) {
+  P1 = ggplot(temp.duration.lost, aes(ts, energy_polarity))+
+        geom_line()+
+        facet_wrap(~c_id)+
+        ggtitle("List of Systems that have been removed due to Sampling Duration")
+  }else("No systems removed due to Sampling Duration")
+  
+ggsave(paste0(substr(pv.file.name, 1,15),"_Removed_DataPoints",".jpeg"), plot=P1, scale=1)
+
+
+temp.clean_duration <- mutate(pv_data_set, durn=temp.file.duration$Avg_duration)
+
+if (as.numeric(temp.file.duration$Avg_duration, units="secs")==60){
+  colnames(temp.clean_duration)[colnames(temp.clean_duration)=="power_kW_min"] <- "power_kW"
+  print("Using 1 minute duration Data")
+} else if (as.numeric(temp.file.duration$Avg_duration, units="secs")==30){
+  colnames(temp.clean_duration)[colnames(temp.clean_duration)=="power_kW"] <- "power_kW"
+  print("Using 30 second duration data")
+} else (print("Insufficient Data to determine duration"))
 
 ###Clean based on aggregate Power
-temp.aggregate_p0 <- aggregate(pv_data_set$power_kW_30sec, 
-                               by = list(c_id = pv_data_set$c_id), 
+temp.aggregate_p0 <- aggregate(temp.clean_duration$power_kW, 
+                               by = list(c_id = temp.clean_duration$c_id), 
                                FUN = sum)
 colnames(temp.aggregate_p0)[colnames(temp.aggregate_p0)=="x"] <- "power_aggregated"
 
 #List out sites where their total power generated is low or less than or equal to zero
-temp.unclean_p0 <- filter(temp.aggregate_p0, power_aggregated <=500)
+temp.unclean_p0 <- filter(temp.aggregate_p0, power_aggregated <=300)
 
-temp.unclean <- left_join(temp.unclean_p0, pv_data_set, by="c_id")
+temp.unclean <- left_join(temp.unclean_p0, temp.clean_duration, by="c_id")
 
-if(nrow(temp.unclean)>0) {
-ggplot(temp.unclean, aes(ts, power_kW_30sec))+
-  geom_line()+
-  facet_wrap(~c_id)+
-  ggtitle("List of Systems that have been removed from the data set as there is negative or no data")
 
-ggsave(paste0(substr(pv.file.name, 1,15),"_Removed_Negative",".jpeg"), plot=last_plot(), scale=1)
+if(length(unique(temp.unclean$c_id))>1){
+ P2a = ggplot(temp.unclean, aes(ts, power_kW))+
+    geom_line()+
+    facet_wrap(~c_id)+
+    ggtitle("List of Systems that have been removed from the data set as there is negative or low data")
+  ggsave(paste0(substr(pv.file.name, 1,15),"_Removed_Negative",".jpeg"), plot=P2a, scale=1)
+    
+  } else if(length(unique(temp.unclean$c_id))==1){
+    P2b = ggplot(temp.unclean, aes(ts, power_kW))+
+        geom_line()+
+        ggtitle("One Systems that have been removed from the data set as there is negative or low  data")
+    ggsave(paste0(substr(pv.file.name, 1,15),"_Removed_Negative",".jpeg"), P2b, device="jpeg")
+    
 } else(print("No systems removed from the data set for negative or no data"))
 
 #Remove these sites from the data set
-temp.clean_1 <- anti_join(pv_data_set, temp.unclean_p0, by = "c_id")
+temp.clean_1 <- anti_join(temp.clean_duration, temp.unclean_p0, by = "c_id")
 
 ###Clean out if readings at night or jumps
 
 temp.unclean_2 <- temp.clean_1 %>% 
   mutate(Time = strftime(ts, format ="%H:%M:%S")) %>% 
-  filter(Time> '19:00:00' | Time< '04:00:00') %>% 
-  filter(power_kW_30sec>10)
+  filter(Time> '19:00:00' & Time< '04:00:00') %>% 
+  filter(power_kW>10)
 
 temp.unclean_2_list <- as.data.frame(unique(temp.unclean_2$c_id))
 names(temp.unclean_2_list) <- "c_id"
 
-temp.unclean_2 <- left_join(temp.unclean_2_list, pv_data_set, by="c_id")
+temp.unclean_2 <- left_join(temp.unclean_2_list, temp.clean_duration, by="c_id")
 
 if(nrow(temp.unclean_2)>0) {
-  ggplot(temp.unclean_2, aes(ts, power_kW_30sec))+
-  geom_line()+
-  facet_wrap(~c_id)+
-  ggtitle("List of Systems that have been removed from the data set as there is data outside of daylight hours")
+ P3 = ggplot(temp.unclean_2, aes(ts, power_kW))+
+      geom_line()+
+      facet_wrap(~c_id)+
+      ggtitle("List of Systems that have been removed from the data set as there is data outside of daylight hours")
 
-ggsave(paste0(substr(pv.file.name, 1,15),"_Removed_NightTime",".jpeg"), plot=last_plot(), scale=1)
+ggsave(paste0(substr(pv.file.name, 1,15),"_Removed_NightTime",".jpeg"), plot=P3, scale=1)
 } else("No systems removed from the data set for data outside of daylight hours")
 
 temp.clean_2 <- anti_join(temp.clean_1, temp.unclean_2_list, by="c_id")
@@ -65,31 +123,44 @@ temp.clean_2 <- anti_join(temp.clean_1, temp.unclean_2_list, by="c_id")
 ###Clean out if missing data during the event
 EventTime <- ymd_hms(EventTime, tz="Australia/Brisbane")
 
-temp.unclean_rows <- filter(temp.clean_2, ts>=(EventTime-minutes(5)) & ts<=(EventTime+minutes(5))) %>% 
-  group_by(c_id) %>% 
-  summarise(rows=n()) %>% 
-  filter(rows!=20)
 
-temp.unclean_3 <- left_join(temp.unclean_rows, pv_data_set, by="c_id")
+if (as.numeric(temp.file.duration$Avg_duration, units="secs")==60){
+  temp.unclean_rows <- filter(temp.clean_2, ts>=(EventTime-minutes(5)) & ts<=(EventTime+minutes(5))) %>% 
+    group_by(c_id) %>% 
+    summarise(rows=n()) %>% 
+    filter(rows<8)
+  
+  
+} else if (as.numeric(temp.file.duration$Avg_duration, units="secs")==30){
+  temp.unclean_rows <- filter(temp.clean_2, ts>=(EventTime-minutes(5)) & ts<=(EventTime+minutes(5))) %>% 
+    group_by(c_id) %>% 
+    summarise(rows=n()) %>% 
+    filter(rows>25 |rows<15)
+  
+} else (print("Insufficient Data to determine if there are sufficent data points during the event"))
+
+
+
+temp.unclean_3 <- left_join(temp.unclean_rows, temp.clean_duration, by="c_id")
 
 if(nrow(temp.unclean_3)>0) {
-ggplot(filter(temp.unclean_3,ts>=(EventTime-minutes(5)) & ts<=(EventTime+minutes(5))) , aes(ts, power_kW_30sec))+
+P4 = ggplot(filter(temp.unclean_3,ts>=(EventTime-minutes(5)) & ts<=(EventTime+minutes(5))) , aes(ts, power_kW))+
   geom_line()+
   facet_wrap(~c_id)+
   ggtitle("List of Systems that have been removed from the data set as there too many or not enough data points during the event")
 
-ggsave(paste0(substr(pv.file.name, 1,15),"_Removed_DataPoints",".jpeg"), plot=last_plot(), scale=1)
+ggsave(paste0(substr(pv.file.name, 1,15),"_Removed_DataPoints",".jpeg"), plot=P4, device="jpeg")
 } else("No systems removed from the data set for too many or not enough data points during the event")
 
 temp.clean_3 <- anti_join(temp.clean_2, temp.unclean_3, by="c_id")
 
-
-ggplot(temp.clean_3, aes(ts, power_kW_30sec))+
+P5a = ggplot(temp.clean_3, aes(ts, power_kW))+
   geom_line()+
   facet_wrap(~c_id)+
   ggtitle("List of all systems after data has been cleaned")
 
-ggsave(paste0(subst(pv.file.name, 1,15),"_Cleaned_Datapoints",".jpeg"), plot=last_plot(), scale=1)
+ggsave(paste0(substr(pv.file.name, 1,15),"_Cleaned_Datapoints",".jpeg"), plot=P5a, scale=1)
+
 
 Final_clean <- temp.clean_3
 
