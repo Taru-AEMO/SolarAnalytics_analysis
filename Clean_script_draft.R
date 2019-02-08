@@ -226,6 +226,25 @@ if (length(unique(temp.clean_3$c_id))>25){
   
 } else (print("No clean files to plot"))
 
+
+###NEEED TO MANUALLY ENTER THESEE C_IDs. 
+# temp.visualcheck.remove <- c("1269489205", "588532479", "161293259", "1052773502", "1945494456", "24708995","334805309","908657853", "2125349252",
+#                              "654669390", "1560015342")
+# 
+# temp.unclean_4 <- temp.clean_3 %>% 
+#   filter(c_id %in% temp.visualcheck.remove)
+# 
+# P6 = ggplot(temp.unclean_4, aes(ts, power_kW))+
+#   geom_line()+
+#   facet_wrap(~c_id, scales = "free_y")+
+#   ggtitle("List of systems that have been removed following a visual check")
+# 
+# ggsave(paste0(substr(pv.file.name, 1,15),"_Cleaned_VisualCheck",".jpeg"), plot=P6, device="jpeg")
+# 
+# Final_clean <- temp.clean_3 %>% 
+#   filter(!c_id %nin% temp.visualcheck.remove)
+
+
 Final_clean <- temp.clean_3
 
 file.name <- substr(max(unlist(strsplit(Actual_Data_file, "/"))),6,20)

@@ -21,9 +21,9 @@ Circuit_details_file <- "circuit_details_4500_updated.csv"
 
 
 EventTime <- "2017-12-09 10:16:00"
-EventTime1 <- "2017-12-09 10:15:47"
-EventTime2 <- "2017-12-09 10:16:22"
-EventTime3 <- "2017-12-09 10:16:44"
+# EventTime1 <- "2017-12-09 10:15:47"
+# EventTime2 <- "2017-12-09 10:16:22"
+# EventTime3 <- "2017-12-09 10:16:44"
 
 #Run through each Process
 #1. Read, Format and Join Data Files
