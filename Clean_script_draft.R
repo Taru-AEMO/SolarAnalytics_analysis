@@ -92,7 +92,7 @@ if(length(unique(temp.unclean$c_id))>1){
   } else if(length(unique(temp.unclean$c_id))==1){
     P2b = ggplot(temp.unclean, aes(ts, power_kW))+
         geom_line()+
-        ggtitle("One Systems that have been removed from the data set as there is negative or low  data")
+        ggtitle("One System has been removed from the data set as there is negative or low  data")
     ggsave(paste0(substr(pv.file.name, 1,15),"_Removed_Negative",".jpeg"), P2b, device="jpeg")
     
 } else(print("No systems removed from the data set for negative or no data"))
@@ -167,7 +167,7 @@ temp.clean_3 <- anti_join(temp.clean_2, temp.unclean_3, by="c_id")
 
 P5a = ggplot(temp.clean_3, aes(ts, power_kW))+
   geom_line()+
-  facet_wrap(~c_id)+
+  facet_wrap(~c_id, scales = "free")+
   ggtitle("List of all systems after data has been cleaned")
 
 ggsave(paste0(substr(pv.file.name, 1,15),"_Cleaned_Datapoints",".jpeg"), plot=P5a, scale=1)

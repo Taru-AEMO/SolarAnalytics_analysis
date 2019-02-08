@@ -40,7 +40,7 @@ full_data_set <- left_join(actual_data_join, inverter_details_unique, by="site_i
 
 ## create and set to output directory
 file.name <- substr(max(unlist(strsplit(Actual_Data_file, "/"))),6,20)
-dir.create(file.path(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/",folder)))
+# dir.create(file.path(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/",folder)))
 setwd(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/",folder))
 
 ##Write CSV for Load Data
@@ -68,8 +68,8 @@ write.csv(pv_data_set, paste0(file.name, "_PVData.csv"))
 battery.list <- c("battery_storage")
 print("Battery sites currently includes:")
 print(paste(battery.list))
-pv_data_set <- filter(full_data_set, con_type %in% battery.list)
+battery_data_set <- filter(full_data_set, con_type %in% battery.list)
 
-write.csv(pv_data_set, paste0(file.name, "_BatteryData.csv"))
+write.csv(battery_data_set, paste0(file.name, "_BatteryData.csv"))
 
 rm(list=c("actual_data_join", "actual_data1", "circuit_details", "inverter_details_unique", "site_details"))
