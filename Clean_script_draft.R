@@ -58,15 +58,13 @@ if(nrow(temp.duration.lost)>0) {
   }else("No systems removed due to Sampling Duration")
   
 
-
-
 temp.clean_duration <- mutate(pv_data_set, durn=temp.file.duration$Avg_duration)
 
 if (as.numeric(temp.file.duration$Avg_duration, units="secs")==60){
   colnames(temp.clean_duration)[colnames(temp.clean_duration)=="power_kW_min"] <- "power_kW"
   print("Using 1 minute duration Data")
 } else if (as.numeric(temp.file.duration$Avg_duration, units="secs")==30){
-  colnames(temp.clean_duration)[colnames(temp.clean_duration)=="power_kW"] <- "power_kW"
+  colnames(temp.clean_duration)[colnames(temp.clean_duration)=="power_kW_30sec"] <- "power_kW"
   print("Using 30 second duration data")
 } else (print("Insufficient Data to determine duration"))
 
