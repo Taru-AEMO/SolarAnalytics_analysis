@@ -5,7 +5,9 @@ setwd(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/input/",folder
 
 
 ##Read in the file, format the parameters appropriately 
-actual_data1 <- read.csv(Actual_Data_file, header=TRUE, stringsAsFactors = FALSE) %>% 
+actual_data1 <- read.csv(Actual_Data_file, header=TRUE, stringsAsFactors = FALSE) 
+
+actual_data1 <- actual_data1[,colSums(is.na(actual_data1))!=nrow(actual_data1)] %>% 
   na.omit()
 
 if(any(names(actual_data1) == "t_stamp")){
@@ -83,4 +85,5 @@ battery_data_set <- filter(full_data_set, con_type %in% battery.list)
 
 write.csv(battery_data_set, paste0(file.name, "_BatteryData.csv"))
 
-rm(list=c("actual_data_join", "actual_data1", "circuit_details", "inverter_details_unique", "site_details"))
+rm(list=c("actual_data_join", "actual_data1", "circuit_details", "inverter_details_unique", "site_details", "actual_data1",
+          "load_data_set", "full_data_set", "actual_data_join", "battery_data_set"))
