@@ -6,20 +6,24 @@ require("reshape2")
 require("installr")
 
 #Set Working Directory - have pulled this out as it will change with each data set.
-folder <- "qld_4701"
+folder <- "qld_4500"
 
 setwd(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/input/",folder))
 
+dir.create(file.path(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/",folder)))
+
 #Input the file name of each of the data sets
-Actual_Data_file <- "data_4701_2018_10_13.csv"
+Actual_Data_file <- "data_4500_2017_12_09.csv"
 
 Site_details_file <- list.files(pattern="site_details")
 
-Circuit_details_file <- "circuit_details_4701_updated.csv"
+Circuit_details_file <- "circuit_details_4500_updated.csv"
 
 
-EventTime <- "2018-10-13 12:24:00"
-
+EventTime <- "2017-12-09 10:16:00"
+EventTime1 <- "2017-12-09 10:15:47"
+EventTime2 <- "2017-12-09 10:16:22"
+EventTime3 <- "2017-12-09 10:16:44"
 
 #Run through each Process
 #1. Read, Format and Join Data Files
