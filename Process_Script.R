@@ -1,9 +1,12 @@
 ####PROCESS_SCRIPT.R
 
+setwd(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/",folder))
+
 #README: This script is designed to Process a Cleaned Data Set to Evaluate the Number of Disconnections.
 
 EventTime <- ymd_hms(EventTime, tz="Australia/Brisbane")
 
+print(EventTime)
 '2017-02-15 10:34:25 AEST'
 #Filter for Power value at T_0
 
