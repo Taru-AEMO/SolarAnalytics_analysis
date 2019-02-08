@@ -55,7 +55,7 @@ if(nrow(temp.duration.lost)>0) {
         facet_wrap(~c_id)+
         ggtitle("List of Systems that have been removed due to Sampling Duration")
 
-  ggplot2::ggsave(paste0(substr(pv.file.name, 1,15),"_Removed_DataPoints",".jpeg"), plot=P1, scale=1)
+  ggplot2::ggsave(paste0(substr(pv.file.name, 1,15),"_Removed_DataPoints",".jpeg"), plot=P1, device="jpeg", scale=1)
   
   }else(print("No systems removed due to Sampling Duration"))
   

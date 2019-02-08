@@ -86,4 +86,4 @@ battery_data_set <- filter(full_data_set, con_type %in% battery.list)
 write.csv(battery_data_set, paste0(file.name, "_BatteryData.csv"))
 
 rm(list=c("actual_data_join", "actual_data1", "circuit_details", "inverter_details_unique", "site_details", "actual_data1",
-          "load_data_set", "full_data_set", "actual_data_join", "battery_data_set"))
+          "load_data_set", "full_data_set", "battery_data_set"))
