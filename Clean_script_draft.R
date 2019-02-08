@@ -17,12 +17,12 @@ if(exists("pv_data_set")){
   
 } else if(!is.empty(pv.file.name)){
   pv_data_set <- read.csv(pv.file.name, header=TRUE, stringsAsFactors = FALSE) %>% 
-    mutate(ts = ymd_hms(ts)) %>% 
-    mutate(ts = with_tz(ts,"Australia/Brisbane")) 
+    mutate(ts = ymd_hms(ts), tz="Australia/Brisbane") 
   
   print("Opening PV CSV file in folder")
 } else("Please run Join_Script.R there does not seem to be a PV File")
 
+pv_data_set <- mutate(pv_data_set, ts= ymd_hms(ts, tz="Australia/Brisbane"))
 
 #####Filter PV File based on Duration Data (NOTE there are some cases where this has already been calculated/provided  - working below assumes it does not)
 temp.duration <- pv_data_set %>% 
@@ -31,7 +31,7 @@ temp.duration <- pv_data_set %>%
   na.omit(duration) %>% 
   filter(duration>0) %>% 
   group_by(c_id) %>% 
-  summarise(Avg_duration=mean(duration))  
+  summarise(Avg_duration=median(duration))  
 
 temp.file.duration <- temp.duration %>% 
   mutate(Avg_duration=round(Avg_duration, digits=0)) %>% 
@@ -52,9 +52,12 @@ if(nrow(temp.duration.lost)>0) {
         geom_line()+
         facet_wrap(~c_id)+
         ggtitle("List of Systems that have been removed due to Sampling Duration")
+  
+  ggplot2::ggsave(paste0(substr(pv.file.name, 1,15),"_Removed_DataPoints",".jpeg"), plot=P1, scale=1)
+  
   }else("No systems removed due to Sampling Duration")
   
-ggsave(paste0(substr(pv.file.name, 1,15),"_Removed_DataPoints",".jpeg"), plot=P1, scale=1)
+
 
 
 temp.clean_duration <- mutate(pv_data_set, durn=temp.file.duration$Avg_duration)
@@ -74,7 +77,7 @@ temp.aggregate_p0 <- aggregate(temp.clean_duration$power_kW,
 colnames(temp.aggregate_p0)[colnames(temp.aggregate_p0)=="x"] <- "power_aggregated"
 
 #List out sites where their total power generated is low or less than or equal to zero
-temp.unclean_p0 <- filter(temp.aggregate_p0, power_aggregated <=300)
+temp.unclean_p0 <- filter(temp.aggregate_p0, power_aggregated <=10)
 
 temp.unclean <- left_join(temp.unclean_p0, temp.clean_duration, by="c_id")
 
@@ -98,11 +101,19 @@ if(length(unique(temp.unclean$c_id))>1){
 temp.clean_1 <- anti_join(temp.clean_duration, temp.unclean_p0, by = "c_id")
 
 ###Clean out if readings at night or jumps
+maxdate <- max(temp.clean_1$ts)
+mindate <- min(temp.clean_1$ts)
 
-temp.unclean_2 <- temp.clean_1 %>% 
-  mutate(Time = strftime(ts, format ="%H:%M:%S")) %>% 
-  filter(Time> '19:00:00' & Time< '04:00:00') %>% 
-  filter(power_kW>10)
+temp.clean_1_time<- temp.clean_1 %>% 
+  mutate(Time = strftime(ts, format ="%T", usetz=TRUE))
+
+temp.unclean_2a <- temp.clean_1_time %>% 
+  filter(Time>='20:00:00' & Time<='23:59:00' & power_kW>10) 
+
+temp.unclean_2b <- temp.clean_1_time %>% 
+  filter(Time>'00:00:00' & Time<'04:00:00' & power_kW>10) 
+
+temp.unclean_2 <- rbind(temp.unclean_2a, temp.unclean_2b)
 
 temp.unclean_2_list <- as.data.frame(unique(temp.unclean_2$c_id))
 names(temp.unclean_2_list) <- "c_id"
