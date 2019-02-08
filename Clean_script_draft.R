@@ -173,7 +173,30 @@ P5a = ggplot(temp.clean_3, aes(ts, power_kW))+
   facet_wrap(~c_id, scales = "free")+
   ggtitle("List of all systems after data has been cleaned")
 
-ggsave(paste0(substr(pv.file.name, 1,15),"_Cleaned_Datapoints",".jpeg"), plot=P5a, device="jpeg")
+
+if (length(unique(temp.clean_3$c_id))>25){
+  
+  numberOutputs = ceiling(length(unique(temp.clean_3$c_id))/25)
+  
+  temp.unique.cids <- as.data.frame(unique(temp.clean_3$c_id))
+  names(temp.unique.cids) <- c("c_id")
+  
+  
+  for (i in (1:numberOutputs)){
+    temp.chart <- filter(temp.unique.cids, row_number()>=(i*25)-24 & row_number()<=i*25)
+    
+    temp.filtered.sites <- left_join(temp.chart, temp.clean_3, by = "c_id")
+    
+    P5b = ggplot(temp.filtered.sites, aes(ts, power_kW))+
+          geom_line()+
+          facet_wrap(~c_id, scales = "free_y")+
+          ggtitle(paste("List of all systems after data has been cleaned", i, "of", numberOutputs))
+    
+    ggsave(paste0(substr(pv.file.name, 1,15),"_Cleaned_Datapoints",i,"of",numberOutputs,".jpeg"), plot=P5b, device="jpeg")
+    
+  }
+  
+} else (ggsave(paste0(substr(pv.file.name, 1,15),"_Cleaned_Datapoints",".jpeg"), plot=P5a, device="jpeg"))
 
 
 Final_clean <- temp.clean_3
