@@ -168,10 +168,6 @@ ggsave(paste0(substr(pv.file.name, 1,15),"_Removed_DataPoints",".jpeg"), plot=P4
 
 temp.clean_3 <- anti_join(temp.clean_2, temp.unclean_3, by="c_id")
 
-P5a = ggplot(temp.clean_3, aes(ts, power_kW))+
-  geom_line()+
-  facet_wrap(~c_id, scales = "free")+
-  ggtitle("List of all systems after data has been cleaned")
 
 
 if (length(unique(temp.clean_3$c_id))>25){
@@ -194,10 +190,38 @@ if (length(unique(temp.clean_3$c_id))>25){
     
     ggsave(paste0(substr(pv.file.name, 1,15),"_Cleaned_Datapoints",i,"of",numberOutputs,".jpeg"), plot=P5b, device="jpeg")
     
+    
+    temp.filter.time = temp.filtered.sites %>% 
+      filter(ts>=(EventTime-minutes(5)) & ts<=(EventTime+minutes(5)))
+    
+    P5c = ggplot(temp.filter.time, aes(ts, power_kW))+
+      geom_line()+
+      facet_wrap(~c_id, scales = "free_y")+
+      ggtitle(paste("List of all systems after data has been cleaned", i, "of", numberOutputs, "Zoom"))
+    
+    ggsave(paste0(substr(pv.file.name, 1,15),"_Cleaned_Datapoints",i,"of",numberOutputs,"Zoom",".jpeg"), plot=P5c, device="jpeg")
+    
   }
   
-} else (ggsave(paste0(substr(pv.file.name, 1,15),"_Cleaned_Datapoints",".jpeg"), plot=P5a, device="jpeg"))
-
+} else if(length(unique(temp.clean_3$c_id))>0 & length(unique(temp.clean_3$c_id))<=25){
+  P5a = ggplot(temp.clean_3, aes(ts, power_kW))+
+    geom_line()+
+    facet_wrap(~c_id, scales = "free")+
+    ggtitle("List of all systems after data has been cleaned")
+  
+  ggsave(paste0(substr(pv.file.name, 1,15),"_Cleaned_Datapoints",".jpeg"), plot=P5a, device="jpeg")
+  
+  temp.filter.time = temp.clean_3 %>% 
+    filter(ts>=(EventTime-minutes(5)) & ts<=(EventTime+minutes(5)))
+  
+  P5d = ggplot(temp.filter.time, aes(ts, power_kW))+
+    geom_line()+
+    facet_wrap(~c_id, scales = "free_y")+
+    ggtitle(paste("List of all systems after data has been cleaned", i, "of", numberOutputs, "Zoom"))
+  
+  ggsave(paste0(substr(pv.file.name, 1,15),"_Cleaned_Datapoints",i,"of",numberOutputs,"Zoom",".jpeg"), plot=P5d, device="jpeg")
+  
+} else (print("No clean files to plot"))
 
 Final_clean <- temp.clean_3
 
@@ -205,6 +229,3 @@ file.name <- substr(max(unlist(strsplit(Actual_Data_file, "/"))),6,20)
 write.csv(Final_clean, paste0(file.name, "_cleaned.csv"))
 
 rm(list=ls(pattern="temp."))
-
-
-
