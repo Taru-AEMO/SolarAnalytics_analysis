@@ -87,7 +87,7 @@ if(length(unique(temp.unclean$c_id))>1){
     geom_line()+
     facet_wrap(~c_id)+
     ggtitle("List of Systems that have been removed from the data set as there is negative or low data")
-  ggsave(paste0(substr(pv.file.name, 1,15),"_Removed_Negative",".jpeg"), plot=P2a, scale=1)
+  ggsave(paste0(substr(pv.file.name, 1,15),"_Removed_Negative",".jpeg"), plot=P2a, device="jpeg")
     
   } else if(length(unique(temp.unclean$c_id))==1){
     P2b = ggplot(temp.unclean, aes(ts, power_kW))+
@@ -103,6 +103,8 @@ temp.clean_1 <- anti_join(temp.clean_duration, temp.unclean_p0, by = "c_id")
 ###Clean out if readings at night or jumps
 maxdate <- max(temp.clean_1$ts)
 mindate <- min(temp.clean_1$ts)
+
+print(paste("Looking at Data from", mindate, "to", maxdate))
 
 temp.clean_1_time<- temp.clean_1 %>% 
   mutate(Time = strftime(ts, format ="%T", usetz=TRUE))
@@ -170,7 +172,7 @@ P5a = ggplot(temp.clean_3, aes(ts, power_kW))+
   facet_wrap(~c_id, scales = "free")+
   ggtitle("List of all systems after data has been cleaned")
 
-ggsave(paste0(substr(pv.file.name, 1,15),"_Cleaned_Datapoints",".jpeg"), plot=P5a, scale=1)
+ggsave(paste0(substr(pv.file.name, 1,15),"_Cleaned_Datapoints",".jpeg"), plot=P5a, device="jpeg")
 
 
 Final_clean <- temp.clean_3
