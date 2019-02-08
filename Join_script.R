@@ -38,9 +38,13 @@ full_data_set <- left_join(actual_data_join, inverter_details_unique, by="site_i
   mutate(power_kW_min = 0.06*energy_polarity/3600) %>% 
   mutate(power_kW_30sec = 0.12*energy_polarity/3600)
 
+## create and set to output directory
+dir.create(file.path(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/", folder)))
+setwd(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/",folder))
 
 ##Write CSV for Load Data
 ###MANUAL CHECK NEEDS TO BE DONE TO MAKE SURE ALL UNIQUE Connection Types are selected. 
+
 print("Please check that all of these connection types have been appropriately accounted for:")
 print(unique(full_data_set$con_type))
 

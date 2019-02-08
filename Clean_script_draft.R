@@ -13,6 +13,9 @@ pv_data_set <- read.csv(pv.file.name, header=TRUE, stringsAsFactors = FALSE) %>%
   mutate(ts = ymd_hms(ts)) %>% 
   mutate(ts = with_tz(ts,"Australia/Brisbane")) 
 
+## set to output directory
+setwd(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/",folder))
+
 ###Clean based on aggregate Power
 temp.aggregate_p0 <- aggregate(pv_data_set$power_kW_30sec, 
                                by = list(c_id = pv_data_set$c_id), 
@@ -55,7 +58,7 @@ if(nrow(temp.unclean_2)>0) {
   ggtitle("List of Systems that have been removed from the data set as there is data outside of daylight hours")
 
 ggsave(paste0(substr(pv.file.name, 1,15),"_Removed_NightTime",".jpeg"), plot=last_plot(), scale=1)
-} else(print("No systems removed from the data set for data outside of daylight hours"))
+} else("No systems removed from the data set for data outside of daylight hours")
 
 temp.clean_2 <- anti_join(temp.clean_1, temp.unclean_2_list, by="c_id")
 
@@ -76,7 +79,7 @@ ggplot(filter(temp.unclean_3,ts>=(EventTime-minutes(5)) & ts<=(EventTime+minutes
   ggtitle("List of Systems that have been removed from the data set as there too many or not enough data points during the event")
 
 ggsave(paste0(substr(pv.file.name, 1,15),"_Removed_DataPoints",".jpeg"), plot=last_plot(), scale=1)
-} else(print("No systems removed from the data set for too many or not enough data points during the event"))
+} else("No systems removed from the data set for too many or not enough data points during the event")
 
 temp.clean_3 <- anti_join(temp.clean_2, temp.unclean_3, by="c_id")
 
@@ -85,6 +88,8 @@ ggplot(temp.clean_3, aes(ts, power_kW_30sec))+
   geom_line()+
   facet_wrap(~c_id)+
   ggtitle("List of all systems after data has been cleaned")
+
+ggsave(paste0(subst(pv.file.name, 1,15),"_Cleaned_Datapoints",".jpeg"), plot=last_plot(), scale=1)
 
 Final_clean <- temp.clean_3
 
