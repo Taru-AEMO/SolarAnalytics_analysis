@@ -39,7 +39,8 @@ full_data_set <- left_join(actual_data_join, inverter_details_unique, by="site_i
   mutate(power_kW_30sec = 0.12*energy_polarity/3600)
 
 ## create and set to output directory
-dir.create(file.path(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/", folder)))
+file.name <- substr(max(unlist(strsplit(Actual_Data_file, "/"))),6,20)
+dir.create(file.path(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/",folder)))
 setwd(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/",folder))
 
 ##Write CSV for Load Data
@@ -53,8 +54,6 @@ load.list <- c("load_air_conditioner", "ac_load_net", "load_other", "battery_sto
 print("Loads currently includes:")
 print(paste(load.list))
 load_data_set <- filter(full_data_set, con_type %in% load.list)
-
-file.name <- substr(max(unlist(strsplit(Actual_Data_file, "/"))),6,20)
 
 write.csv(load_data_set, paste0(file.name, "_LoadData.csv"))
 
