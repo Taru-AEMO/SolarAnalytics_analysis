@@ -13,7 +13,7 @@ pv.file.name <- list.files(pattern="_PVData.csv")
 if(exists("pv_data_set")){
   pv_data_set <- as.data.frame(pv_data_set)
   
-  print("Using current PV Data File")
+  print("Using current PV Data Frame")
   
 } else if(!is.empty(pv.file.name)){
   pv_data_set <- read.csv(pv.file.name, header=TRUE, stringsAsFactors = FALSE) %>% 
@@ -22,7 +22,9 @@ if(exists("pv_data_set")){
   print("Opening PV CSV file in folder")
 } else("Please run Join_Script.R there does not seem to be a PV File")
 
+
 pv_data_set <- mutate(pv_data_set, ts= ymd_hms(ts, tz="Australia/Brisbane"))
+
 
 #####Filter PV File based on Duration Data (NOTE there are some cases where this has already been calculated/provided  - working below assumes it does not)
 temp.duration <- pv_data_set %>% 
@@ -52,11 +54,12 @@ if(nrow(temp.duration.lost)>0) {
         geom_line()+
         facet_wrap(~c_id)+
         ggtitle("List of Systems that have been removed due to Sampling Duration")
-  
+
   ggplot2::ggsave(paste0(substr(pv.file.name, 1,15),"_Removed_DataPoints",".jpeg"), plot=P1, scale=1)
   
-  }else("No systems removed due to Sampling Duration")
+  }else(print("No systems removed due to Sampling Duration"))
   
+
 
 temp.clean_duration <- mutate(pv_data_set, durn=temp.file.duration$Avg_duration)
 
