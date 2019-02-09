@@ -52,38 +52,96 @@ full_data_set <- left_join(actual_data_join, inverter_details_unique, by="site_i
 ## create and set to output directory
 file.name <- substr(max(unlist(strsplit(Actual_Data_file, "/"))),6,20)
 
+data.date <- as.Date(mean(full_data_set$ts))
+
 setwd(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/",folder))
+
+dir.create(file.path(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/",folder, "/",data.date)))
+
+setwd(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/",folder, "/", data.date))
 
 ##Write CSV for Load Data
 ###MANUAL CHECK NEEDS TO BE DONE TO MAKE SURE ALL UNIQUE Connection Types are selected. 
 
-print("Please check that all of these connection types have been appropriately accounted for:")
-print(unique(full_data_set$con_type))
+count.data <- full_data_set %>% 
+  group_by(con_type, c_id) %>% 
+  summarise(count=n()) %>% 
+  group_by(con_type) %>% 
+  summarise(count=n())
+
+print("Data set contains")
+print(count.data)
+
+
+print("Please check that the above connection types have been appropriately accounted for in the lists below:")
+
 
 load.list <- c("load_air_conditioner", "ac_load_net", "ac_load","load_other", 
                "load_pool","load_hot_water","load_stove","load_lighting",
-               "load_office", "", "load_hot_water", "load_hot_water_solar", "load_powerpoint",
-               "load_refrigerator", "load_shed", "load_ev_charger")
+               "load_office", "", "load_hot_water_solar", "load_powerpoint",
+               "load_refrigerator", "load_shed", "load_ev_charger", "load_machine")
+load.list.df <- as.data.frame(load.list) 
+colnames(load.list.df) <- "con_type"
+load.list.df <- mutate(load.list.df, con_type = as.character(con_type))
+
+load.list.file <- semi_join(load.list.df, count.data,by=c("con_type"))
+
 print("Loads currently includes:")
-print(paste(load.list))
+print(load.list.file)
 load_data_set <- filter(full_data_set, con_type %in% load.list)
 
 write.csv(load_data_set, paste0(file.name, "_LoadData.csv"))
 
 pv.list <- c("pv_site_net", "pv_site")
+pv.list.df <- as.data.frame(pv.list) 
+colnames(pv.list.df) <- "con_type"
+pv.list.df <- mutate(pv.list.df, con_type = as.character(con_type))
+pv.list.file <- semi_join(pv.list.df, count.data,by=c("con_type"))
+
 print("PV sites currently includes:")
-print(paste(pv.list))
+print(pv.list.file)
 pv_data_set <- filter(full_data_set, con_type %in% pv.list)
 
 write.csv(pv_data_set, paste0(file.name, "_PVData.csv"))
 
 
 battery.list <- c("battery_storage")
-print("Battery sites currently includes:")
-print(paste(battery.list))
-battery_data_set <- filter(full_data_set, con_type %in% battery.list)
+battery.list.df <- as.data.frame(battery.list) 
+colnames(battery.list.df) <- "con_type"
+battery.list.df <- mutate(battery.list.df, con_type = as.character(con_type))
+battery.list.file <- semi_join(battery.list.df, count.data,by=c("con_type"))
 
-write.csv(battery_data_set, paste0(file.name, "_BatteryData.csv"))
 
-rm(list=c("actual_data_join", "actual_data1", "circuit_details", "inverter_details_unique", "site_details", "actual_data1",
+if(nrow(battery.list.file)>0) {
+  print("Battery sites currently includes:")
+  print(battery.list.file)
+  battery_data_set <- filter(full_data_set, con_type %in% battery.list)
+  
+  write.csv(battery_data_set, paste0(file.name, "_BatteryData.csv"))
+  
+}else (print("No Battery data in dataset"))
+
+
+
+full.list <- c("load_air_conditioner", "ac_load_net", "ac_load","load_other", 
+               "load_pool","load_hot_water","load_stove","load_lighting",
+               "load_office", "", "load_hot_water_solar", "load_powerpoint",
+               "load_refrigerator", "load_shed", "load_ev_charger", 
+               "pv_site_net", "pv_site", "battery_storage", "load_machine")
+
+full.list.df <- as.data.frame(full.list)
+colnames(full.list.df) <- "con_type"
+full.list.df <- mutate(full.list.df, con_type = as.character(con_type))
+
+unaccounted.list <- anti_join(count.data, full.list.df, by="con_type")
+
+if(nrow(unaccounted.list)>0) {
+print("Accounted for Connection types:")
+print(unaccounted.list)
+}else (print("No Connection types unaccounted for"))
+
+if(nrow(battery.list.file)>0) {
+rm(list=c("actual_data_join", "actual_data1", "circuit_details", "inverter_details_unique", "site_details",
           "load_data_set", "full_data_set", "battery_data_set"))
+}else (rm(list=c("actual_data_join", "actual_data1", "circuit_details", "inverter_details_unique", "site_details",
+                 "load_data_set", "full_data_set")))

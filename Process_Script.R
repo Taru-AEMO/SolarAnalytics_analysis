@@ -1,49 +1,52 @@
 ####PROCESS_SCRIPT.R
 
-setwd(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/",folder))
+setwd(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/",folder,"/",data.date))
 
 #README: This script is designed to Process a Cleaned Data Set to Evaluate the Number of Disconnections.
 
 EventTime <- ymd_hms(EventTime, tz="Australia/Brisbane")
 
 print(EventTime)
-'2017-02-15 10:34:25 AEST'
+
 #Filter for Power value at T_0
 
 t_0 <- EventTime
 t_end_estimate_nadir <- EventTime + minutes(4)
 t_end_nadir <- EventTime + minutes(2)
 
-temp.power_t0 <- filter(Final_clean, ts==t_0) %>%
-  .[,c("c_id", "ts","power_kW_30sec")]
+temp.power_t0 <- filter(Final_clean, ts>=(t_0 - seconds(14)) & ts<= (t_0 + seconds(14))) %>%
+  .[,c("c_id", "ts","power_kW")]
 
+##Print confirmation
+print(paste("Number of unique ids in data set", length(unique(Final_clean$c_id))))
 
-temp.unmatch <- anti_join(Final_clean,temp.power_t0, by='c_id') %>% 
-  filter(ts== (ymd_hms(t_0, tz="Australia/Brisbane") - seconds(30))) %>% 
-  .[,c("c_id", "ts","power_kW_30sec")]
+print(paste("Number of rows selected", nrow(temp.power_t0), "this is made up of", length(unique(temp.power_t0$c_id)), "unique ids"))
 
-temp.power_t0 <- rbind(temp.power_t0, temp.unmatch)
+Print("Please confirm these values match")
 
-colnames(temp.power_t0)[colnames(temp.power_t0)=="power_kW_30sec"] <- "p_0"
+#Change Column Names
+colnames(temp.power_t0)[colnames(temp.power_t0)=="power_kW"] <- "p_0"
 colnames(temp.power_t0)[colnames(temp.power_t0)=="ts"] <- "t0"
+
+
 #Filter for possible Nadir time then identify the T_Nadir and identify power at this time
 temp.nadir.df <- filter(Final_clean, ts>t_0 & ts<=t_end_estimate_nadir)
 temp.nadir_t0 <- temp.nadir.df%>%
   group_by(c_id) %>%
-  summarise(p_nadir=min(power_kW_30sec)) %>%
-  left_join(temp.nadir.df[,c("c_id","ts","power_kW_30sec")], by=c("c_id", "p_nadir"="power_kW_30sec")) %>%
+  summarise(p_nadir=min(power_kW)) %>%
+  left_join(temp.nadir.df[,c("c_id","ts","power_kW")], by=c("c_id", "p_nadir"="power_kW")) %>%
   .[,c(1,3,2)]
 colnames(temp.nadir_t0)[colnames(temp.nadir_t0)=="ts"] <- "t_nadir"
 
 #Filter for Power Value at T_1 and T_2
-temp.power_t1 <- filter(Final_clean, ts==(ymd_hms(t_0, tz="Australia/Brisbane") + seconds(30))) %>%
-  .[,c("c_id","ts","power_kW_30sec")]
-colnames(temp.power_t1)[colnames(temp.power_t1)=="power_kW_30sec"] <- "p_0plus1"
+temp.power_t1 <- filter(Final_clean, ts>=(t_0 + seconds(16)) & ts<=(t_0 + seconds(45))) %>%
+  .[,c("c_id","ts","power_kW")]
+colnames(temp.power_t1)[colnames(temp.power_t1)=="power_kW"] <- "p_0plus1"
 colnames(temp.power_t1)[colnames(temp.power_t1)=="ts"] <- "t_0plus1"
 
-temp.power_t2 <- filter(Final_clean, ts==(ymd_hms(t_0, tz="Australia/Brisbane") + minutes(1)+seconds(30))) %>%
-  .[,c("c_id","ts","power_kW_30sec")]
-colnames(temp.power_t2)[colnames(temp.power_t2)=="power_kW_30sec"] <- "p_0plus2"
+temp.power_t2 <- filter(Final_clean, ts>=(t_0 + seconds(46)) & ts<=(t_0 + seconds(135))) %>%
+  .[,c("c_id","ts","power_kW")]
+colnames(temp.power_t2)[colnames(temp.power_t2)=="power_kW"] <- "p_0plus2"
 colnames(temp.power_t2)[colnames(temp.power_t2)=="ts"] <- "t_0plus2"
 
 #Join Tables Together and clean
@@ -93,6 +96,15 @@ temp.category <- temp.ramp.diff %>%
                                                ifelse((abs(p_0plus1)<abs(p_0plus2))&abs(perc_drop_to_p1)<=Cat1_PL_perc, "Category 2 - Dip",
                                                       "Category 2 - Curtailment")))))
 
+
+temp.category.table <- temp.category %>% 
+  group_by(Category,c_id) %>% 
+  summarise(count =n()) %>% 
+  group_by(Category) %>% 
+  summarise(count = n())
+
+
+print(temp.category.table)
 # 
 # 
 # colnames(temp.clean_1)[colnames(temp.clean_1)=="State"] <- "s_state"
@@ -115,31 +127,53 @@ temp.working <- temp.clean_1 %>%
   na.omit()
 
 
-temp.a <- as.data.frame( unique(temp.category$c_id))
-
-colnames(temp.a)[colnames(temp.a)=="unique(temp.category$c_id)"] <- "c_id"
-
-temp.b <- as.data.frame( unique(temp.working$c_id))
-colnames(temp.b)[colnames(temp.b)=="unique(temp.working$c_id)"] <- "c_id"
-
-anti_join(temp.b, temp.a)
+# temp.a <- as.data.frame( unique(temp.category$c_id))
+# 
+# colnames(temp.a)[colnames(temp.a)=="unique(temp.category$c_id)"] <- "c_id"
+# 
+# temp.b <- as.data.frame( unique(temp.working$c_id))
+# colnames(temp.b)[colnames(temp.b)=="unique(temp.working$c_id)"] <- "c_id"
+# 
+# anti_join(temp.b, temp.a)
 
 draft_output <- left_join(temp.working, temp.category, by="c_id")
+
+temp.output <- left_join(temp.power_t0, draft_output, by = c("c_id","t0"="ts"))
 
 write.csv(draft_output, "output2.csv")
 
 
-temp.b <- filter(draft_output, ts==EventTime) %>%
+temp.b <- temp.output %>%
   group_by(Category_basix, Standard_Version) %>% 
-  summarise(Count=n(),
-            InstalledCap=sum(DC.Rating.kW.))
+  summarise(Count=n())
 
+ggplot(data = temp.b, aes(x = Standard_Version, y=Count, fill = Category_basix))+
+  geom_bar(stat = "identity")
+
+temp.d <- temp.b %>% 
+  group_by(Standard_Version) %>% 
+  summarise(TotalCount = sum(Count)) %>% 
+  right_join(.,temp.b, by="Standard_Version") %>% 
+  mutate(Percentage_of_Systems = Count/TotalCount*100)
+
+
+ggplot(data = temp.d, aes(x = Standard_Version, y=Percentage_of_Systems, fill = Category_basix))+
+  geom_bar(stat = "identity")
+
+
+  
+temp.c <- temp.output %>%
+  group_by(Category_basix, Standard_Version) %>% 
+  summarise(InstalledCap=sum(DC.Rating.kW.))
+
+ggplot(data = temp.c, aes(x = Standard_Version, y=InstalledCap, fill = Category_basix))+
+  geom_bar()
 
 write.csv(temp.b, "impact_standard_count.csv", row.names=TRUE)
 
 temp.c <- draft_output %>% 
   group_by(ts, Category_basix, Standard_Version) %>% 
-  summarise(Agg_power= sum(power_kW_30sec))
+  summarise(Agg_power= sum(power_kW))
 
 temp.before.Event <- EventTime - minutes(5)
   
@@ -147,7 +181,8 @@ temp.after.Event <- EventTime + minutes(10)
 
 ggplot(filter(temp.c, ts>=temp.before.Event & ts<=temp.after.Event), aes(x=ts, y=Agg_power))+
   geom_point()+
-  facet_grid(~Standard_Version)
+  facet_grid(~Standard_Version)+
+  geom_vline(xintercept = EventTime, linetype="dashed")
 
 # chartoutput <- filter(draft_output, Category_basix=="Category 2 - Dip" & Standard_Version=="AS4777.2:2015")
 # 
