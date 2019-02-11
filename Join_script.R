@@ -60,7 +60,7 @@ dir.create(file.path(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis
 
 setwd(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/",folder, "/", data.date))
 
-##Write CSV for Load Data
+##Write CSV for All data types
 ###MANUAL CHECK NEEDS TO BE DONE TO MAKE SURE ALL UNIQUE Connection Types are selected. 
 
 count.data <- full_data_set %>% 
