@@ -1,38 +1,46 @@
 ####PROCESS_SCRIPT.R
 
-setwd(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/",folder))
+setwd("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/ToAnalyse/")
 
 
 input.file.name <- list.files(pattern="_cleaned.csv")
 
-EventTime <- "2018_02_11 16:28:33"
 
-if(exists("Final_clean")){
-  Final_clean <- as.data.frame(Final_clean)
+#Define Category thresholds 
+Cat1_PL_perc <- 0.04
+#Categories 2-6: Curtailment
+Cat2_PL_perc <- 0.1
+Cat3_PL_perc <- 0.25
+Cat4_PL_perc <- 0.5
+Cat5_PL_perc <- 0.75
+Cat6_PL_perc <- 0.1
+#As a value in kW
+#Category 7: Disconnect
+Cat7_Disconnect_kW=0.1
+Cat8_Disconnect_kW=0
 
-  print("Using current Cleaned PV Data Frame")
+for (i in input.file.name){
+  
+dir.create(file.path(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/ToAnalyse/",substr(i,1,22))))
 
-} else if(!is.empty(Final_clean)){
-  Final_clean <- read.csv(input.file.name, header=TRUE, stringsAsFactors = FALSE) %>%
-    mutate(ts = ymd_hms(ts, tz="Australia/Brisbane"))
+EventTime <- ymd_hms(paste0(substr(i, 6, 15)," ",substr(i, 17, 18),":",substr(i, 19, 20),":",substr(i, 21, 22)), tz="Australia/Brisbane")
+                    
+print(EventTime)
 
-  print("Opening Cleaned PV CSV file in folder")
-} else("Please run Join_Script.R and Clean_Script.R there does not seem to be a Cleaned PV File")
 
+Final_clean <- read.csv(i, header=TRUE, stringsAsFactors = FALSE) %>%
+  mutate(ts = ymd_hms(ts, tz="Australia/Brisbane"))
 
 Final_clean <- Final_clean %>% 
   mutate(pv_install_date_day=ifelse(nchar(pv_install_date)==10,pv_install_date, paste0(pv_install_date, "-28"))) %>%
   mutate(pv_install_date_day=ymd(pv_install_date_day)) %>%
   mutate(Standard_Version = ifelse(pv_install_date_day<"2015-10-09", "AS4777.3:2005", ifelse(pv_install_date_day>="2016-10-09", "AS4777.2:2015", "Transition"))) %>% 
   mutate(DC.Rating.kW.= DC.Rating.kW./1000) %>% 
-  mutate(Size = ifelse(DC.Rating.kW.<30, "<30 kW", ifelse(DC.Rating.kW.<=100, "30-100kW", ">100kW"))) %>%
+  mutate(Size = ifelse(DC.Rating.kW.<30, "<30 kW", ifelse(DC.Rating.kW.<=100, "30-100kW", ">100kW"))) %>% 
+  subset(select = -duration) %>% 
   na.omit()
 
 #README: This script is designed to Process a Cleaned Data Set to Evaluate the Number of Disconnections.
-
-EventTime <- ymd_hms(EventTime, tz="Australia/Brisbane")
-
-print(EventTime)
 
 #Filter for Power value at T_0
 
@@ -115,6 +123,9 @@ temp.category <- temp.ramp.diff %>%
 
 ####OUTPUTS######
 ###Print CSV of Category Types
+
+setwd(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/ToAnalyse/",substr(i,1,22)))
+
 temp.category.table1 <- temp.category %>% 
   group_by(Category_basic,c_id) %>% 
   summarise(count =n()) %>% 
@@ -133,7 +144,7 @@ temp.total <- temp.category.table2 %>%
 temp.category.table2 <- temp.category.table2 %>% 
   mutate(Proportion_Percent = (count/temp.total$sum)*100)
 
-write.csv(temp.category.table2, paste0("Response_type_", substr(input.file.name, 1,15), ".csv"))
+write.csv(temp.category.table2, paste0("Response_type_", substr(i, 1,15), ".csv"))
 
 print(temp.category.table2)
 
@@ -187,27 +198,47 @@ for (ii in temp.list){
   }else (print("No clean files to plot"))
 }  
 ########################TEST - APPLYING VOLTAGE CHART AS WELL#########################
-values <- c("1230994040","1729782333")
+temp.disconnect <- filter(temp.output, Category == "Category 7 - Disconnect")
 
-for (icid in values){
+temp.disconnect.values <- unique(temp.disconnect$c_id)
 
-
+for (idisconnect in temp.disconnect.values){
   
+  temp.disconnect.values2 <- filter(Final_clean, c_id==idisconnect) %>%
+      filter(ts>= (EventTime-minutes(2)) & ts<=(EventTime+minutes(5)))
 
+    p1 <- ggplot(temp.disconnect.values2, aes(x = ts, y=power_kW))+
+      geom_line(stat="identity")+
+      geom_vline(xintercept = EventTime, linetype="dashed")
+    # ggtitle(paste(ii))
 
-  )
+    p2 <- ggplot(temp.disconnect.values2, aes(x = ts, y=voltage))+
+      geom_line()+
+      # geom_line(stat="identity")+
+      # facet_wrap(~c_id, scales = "free_y")+
+      geom_vline(xintercept = EventTime, linetype="dashed")
+    # ggtitle(paste(ii))
 
+    p3 <- ggplot(temp.disconnect.values2, aes(x = ts, y=voltage/240))+
+      geom_line()+
+      geom_vline(xintercept = EventTime, linetype="dashed")
 
-
- ml <- marrangeGrob(pl, nrow=2, ncol=2)
-
-
-    pl <- lapply(1:11, function(.x)
-      qplot(1:10, rnorm(10), main=paste("plot", .x)))
-
+    g1 <- ggplotGrob(p1)
+    #g1 <- gtable_add_cols(g1, unit(0,"mm")) # add a column for missing legend
+    g2 <- ggplotGrob(p2)
+    g3 <- ggplotGrob(p3)
+    g <- rbind(g1, g2, g3, size="first") # stack the two plots
+    g$widths <- unit.pmax(g1$widths, g2$widths) # use the largest widths
+    # center the legend vertically
+    g$layout[grepl("guide", g3$layout$name),c("t","b")] <- c(1,nrow(g))
+    grid.newpage()
+    grid.draw(g)
     
-    
-####Summarising To Standard Version and 
+    ggsave(paste0("_",substr(i, 6,22),"_",idisconnect,".jpeg"), plot=g, device="jpeg")
+  
+}
+
+####Summarising To Standard Version and Outputting######
 
 temp.b <- temp.output %>%
   group_by(Category_basic, Standard_Version) %>% 
@@ -222,9 +253,18 @@ temp.d <- temp.b %>%
   right_join(.,temp.b, by="Standard_Version") %>% 
   mutate(Percentage_of_Systems = Count/TotalCount*100)
 
+write.csv(temp.d, paste0("Response_type_by_Standard_", substr(i, 6,22), ".csv"))
 
 ggplot(data = temp.d, aes(x = Standard_Version, y=Percentage_of_Systems, fill = Category_basic))+
   geom_bar(stat = "identity")
+
+ggsave(paste0("BarChart_Rsponse_byStandard_",substr(i, 6,22),".jpeg"), plot=last_plot(), device="jpeg")
+
+
+write.csv(temp.output, paste0("Output_",substr(i, 6,22),".csv"))
+
+}
+
 
 
 #   
@@ -241,14 +281,16 @@ ggplot(data = temp.d, aes(x = Standard_Version, y=Percentage_of_Systems, fill = 
 #   group_by(ts, Category_basix, Standard_Version) %>% 
 #   summarise(Agg_power= sum(power_kW))
 
-temp.before.Event <- EventTime - minutes(5)
-  
-temp.after.Event <- EventTime + minutes(10)
+# temp.before.Event <- EventTime - minutes(5)
+#   
+# temp.after.Event <- EventTime + minutes(10)
+# 
+# ggplot(filter(temp.c, ts>=temp.before.Event & ts<=temp.after.Event), aes(x=ts, y=Agg_power))+
+#   geom_point()+
+#   facet_grid(~Standard_Version)+
+#   geom_vline(xintercept = EventTime, linetype="dashed")
 
-ggplot(filter(temp.c, ts>=temp.before.Event & ts<=temp.after.Event), aes(x=ts, y=Agg_power))+
-  geom_point()+
-  facet_grid(~Standard_Version)+
-  geom_vline(xintercept = EventTime, linetype="dashed")
+
 
 # chartoutput <- filter(draft_output, Category_basix=="Category 2 - Dip" & Standard_Version=="AS4777.2:2015")
 # 
@@ -330,33 +372,42 @@ ggplot(filter(temp.c, ts>=temp.before.Event & ts<=temp.after.Event), aes(x=ts, y
 # # 
 # # write.csv(draft_output, "output2.csv")
 
+###Plotting power and Voltage as one
+# plot_power_voltage <- function(id){
+#   temp.curtail.values2 <- filter(Final_clean, c_id==id) %>%
+#     filter(ts>= (EventTime-minutes(2)) & ts<=(EventTime+minutes(5)))
+#   
+#   p1 <- ggplot(temp.curtail.values2, aes(x = ts, y=power_kW))+
+#     geom_line(stat="identity")+
+#     geom_vline(xintercept = EventTime, linetype="dashed")
+#   # ggtitle(paste(ii))
+#   
+#   p2 <- ggplot(temp.curtail.values2, aes(x = ts, y=voltage))+
+#     geom_line()+
+#     # geom_line(stat="identity")+
+#     # facet_wrap(~c_id, scales = "free_y")+
+#     geom_vline(xintercept = EventTime, linetype="dashed")
+#   # ggtitle(paste(ii))
+#   
+#   
+#   g1 <- ggplotGrob(p1)
+#   #g1 <- gtable_add_cols(g1, unit(0,"mm")) # add a column for missing legend
+#   g2 <- ggplotGrob(p2)
+#   g3 <- rbind(g1, g2, size="first") # stack the two plots
+#   g3$widths <- unit.pmax(g1$widths, g2$widths) # use the largest widths
+#   # center the legend vertically
+#   g3$layout[grepl("guide", g3$layout$name),c("t","b")] <- c(1,nrow(g3))
+#   grid.newpage()
+#   grid.draw(g)
+#   
+# }
 
-plot_power_voltage <- function(id, data_frame){
-  temp.curtail.values2 <- filter(data_frame, c_id==id) %>%
-    filter(ts>= (EventTime-minutes(2)) & ts<=(EventTime+minutes(5)))
-  
-  p1 <- ggplot(temp.curtail.values2, aes(x = ts, y=power_kW))+
-    geom_line(stat="identity")+
-    geom_vline(xintercept = EventTime, linetype="dashed")
-  # ggtitle(paste(ii))
-  
-  p2 <- ggplot(temp.curtail.values2, aes(x = ts, y=voltage))+
-    geom_line()+
-    # geom_line(stat="identity")+
-    # facet_wrap(~c_id, scales = "free_y")+
-    geom_vline(xintercept = EventTime, linetype="dashed")
-  # ggtitle(paste(ii))
-  
-  
-  g1 <- ggplotGrob(p1)
-  #g1 <- gtable_add_cols(g1, unit(0,"mm")) # add a column for missing legend
-  g2 <- ggplotGrob(p2)
-  g3 <- rbind(g1, g2, size="first") # stack the two plots
-  g3$widths <- unit.pmax(g1$widths, g2$widths) # use the largest widths
-  # center the legend vertically
-  g3$layout[grepl("guide", g3$layout$name),c("t","b")] <- c(1,nrow(g3))
-  grid.newpage()
-  grid.draw(g)
-  
-}
-
+###Example of a working version
+# set.seed(123)
+# pl <- lapply(1:11, function(.x) 
+#   qplot(1:10, rnorm(10), main=paste("plot", .x)))
+# ml <- marrangeGrob(pl, nrow=2, ncol=2)
+# ## non-interactive use, multipage pdf
+# ## ggsave("multipage.pdf", ml)
+# ## interactive use; calling `dev.new` multiple times
+# ml

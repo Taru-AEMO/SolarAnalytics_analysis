@@ -80,6 +80,9 @@ load.list <- c("load_air_conditioner", "ac_load_net", "ac_load","load_other",
                "load_pool","load_hot_water","load_stove","load_lighting",
                "load_office", "", "load_hot_water_solar", "load_powerpoint",
                "load_refrigerator", "load_shed", "load_ev_charger", "load_machine")
+
+
+
 load.list.df <- as.data.frame(load.list) 
 colnames(load.list.df) <- "con_type"
 load.list.df <- mutate(load.list.df, con_type = as.character(con_type))
