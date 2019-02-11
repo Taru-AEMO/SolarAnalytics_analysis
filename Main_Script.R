@@ -11,14 +11,14 @@ folder <- "qld_4551"
 setwd(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/input/",folder))
 
 #Input the file name of each of the data sets
-Actual_Data_file <- "data_4551_2018_01_19.csv"
+Actual_Data_file <- "data_4551_2017_12_31.csv"
 
 Site_details_file <- list.files(pattern="site_details")
 
 Circuit_details_file <- "circuit_details_4551_updated.csv"
 
 
-EventTime <- "2018-01-19 09:31:02"
+EventTime <- "2017-12-31 14:22:57"
 
 
 #Run through each Process
