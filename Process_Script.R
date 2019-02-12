@@ -159,8 +159,9 @@ temp.final4 <- temp.category.table2 %>%
 
 
 temp.final5 <- temp.final4 %>% 
-  mutate(Disconnect = filter(temp.category.table1, Category_basic=="Category 7 - Disconnect")$count) %>% 
-  mutate(Curtail = filter(temp.category.table1, Category_basic=="Category 2-6 - Curtailment")$count)
+  mutate(Disconnect = ifelse(is.empty(filter(temp.category.table1, Category_basic=="Category 7 - Disconnect")$count),0,filter(temp.category.table1, Category_basic=="Category 7 - Disconnect")$count)) %>% 
+  mutate(Curtail = ifelse(is.empty(filter(temp.category.table1, Category_basic=="Category 2-6 - Curtailment")$count),0,filter(temp.category.table1, Category_basic=="Category 2-6 - Curtailment")$count)) %>% 
+  mutate(RideThrough = ifelse(is.empty(filter(temp.category.table1, Category_basic=="Category 1 - Ride Through")$count),0,filter(temp.category.table1, Category_basic=="Category 1 - Ride Through")$count))
 
 temp.totalsum <- temp.category.table2 %>% 
   group_by(t0) %>% 
@@ -281,9 +282,15 @@ temp.final2 <- temp.final5 %>%
           CurtailAS2015=ifelse(is.empty(filter(temp.b, Category_basic =="Category 2-6 - Curtailment" & Standard_Version =="AS4777.2:2015")$Count),0, filter(temp.b, Category_basic =="Category 2-6 - Curtailment" & Standard_Version =="AS4777.2:2015")$Count),
           CurtailAS2005=ifelse(is.empty(filter(temp.b, Category_basic =="Category 2-6 - Curtailment" & Standard_Version =="AS4777.3:2005")$Count),0,filter(temp.b, Category_basic =="Category 2-6 - Curtailment" & Standard_Version =="AS4777.3:2005")$Count),
           CurtailTranstn=ifelse(is.empty(filter(temp.b, Category_basic =="Category 2-6 - Curtailment" & Standard_Version =="Transition")$Count),0,filter(temp.b, Category_basic =="Category 2-6 - Curtailment" & Standard_Version =="Transition")$Count)) %>% 
-  mutate(Disconnections = paste(round(Disconnect/TotalNumberSystems*100,2), "% of total systems (AS4777:2015 -", DisconnectAS2015, "systems, Transition - ", DisconnectTranstn, "systems, AS4777.3:2005 -", DisconnectAS2005, "systems)")) %>% 
-  mutate(Curtailments = paste(round(Curtail/TotalNumberSystems*100,2), "% of total systems (AS4777:2015 -", CurtailAS2015, "systems, Transition - ", CurtailTranstn, "systems, AS4777.3:2005 -", CurtailAS2005, "systems)")) %>% 
-  .[,c(1:6,13,14)]
+  mutate(Disconnect = paste0(round(Disconnect/TotalNumberSystems*100,2), "% (",Disconnect," systems)"),
+         DisconnectAS2015 = paste0(round(DisconnectAS2015/TotalNumberSystems*100,2), "% (",DisconnectAS2015," systems)"),
+         DisconnectAS2005 = paste0(round(DisconnectAS2005/TotalNumberSystems*100,2), "% (",DisconnectAS2005," systems)"),
+         DisconnectTranstn = paste0(round(DisconnectTranstn/TotalNumberSystems*100,2), "% (",DisconnectTranstn," systems)"),
+         Curtail = paste0(round(Curtail/TotalNumberSystems*100,2), "% (",Curtail," systems)"),
+         CurtailAS2015 = paste0(round(CurtailAS2015/TotalNumberSystems*100,2), "% (",CurtailAS2015," systems)"),
+         CurtailAS2005 = paste0(round(CurtailAS2005/TotalNumberSystems*100,2), "% (",CurtailAS2005," systems)"),
+         CurtailTranstn = paste0(round(CurtailTranstn/TotalNumberSystems*100,2), "% (",CurtailTranstn," systems)"),
+         RideThrough = paste0(round(RideThrough/TotalNumberSystems*100,2), "% (",RideThrough," systems)")) 
 
 temp.d <- temp.b %>% 
   group_by(Standard_Version) %>% 
@@ -302,16 +309,16 @@ ggsave(paste0("BarChart_Rsponse_byStandard_",substr(i, 6,22),".jpeg"), plot=last
 write.csv(temp.output, paste0("Output_",substr(i, 6,22),".csv"))
 
 temp.final3 <- temp.final2 %>%
-  mutate(MaxVoltage=max(filter(draft_output, ts>=EventTime & ts<=(EventTime+ minutes(2)) & Category_basic=="Category 7 - Disconnect")$voltage)) %>% 
-  mutate(MinVoltage=min(filter(draft_output, ts>=EventTime & ts<=(EventTime+ minutes(2)) & Category_basic=="Category 7 - Disconnect")$voltage)) %>% 
-  mutate(MaximumVoltage = paste(round(MaxVoltage,2), "V (", round(MaxVoltage/240,2), "pu)")) %>% 
-  mutate(MinimumVoltage = paste(round(MinVoltage,2), "V (", round(MinVoltage/240,2), "pu)")) %>% 
-  .[,c(1:8,11,12)]
+  mutate(MaxVoltage=max(filter(draft_output, ts>=EventTime & ts<=(EventTime+ minutes(2)))$voltage)) %>% 
+  mutate(MinVoltage=min(filter(draft_output, ts>=EventTime & ts<=(EventTime+ minutes(2)))$voltage)) %>% 
+  mutate(MaxVoltage = paste(round(MaxVoltage,2), "V (", round(MaxVoltage/240,2), "pu)")) %>% 
+  mutate(MinVoltage = paste(round(MinVoltage,2), "V (", round(MinVoltage/240,2), "pu)"))
 
 temp.final <- temp.final3
 
-colnames(temp.final) <- c("Location", "Time of Event", "Total Number of Systems", "Number of Disconnections", "Number of Curtailments", "Disconnections Summary", 
-                          "Curtailments Summary", "Maximum Voltage Observed", "Minumum Voltage Observed")
+colnames(temp.final) <- c("Location", "Time of Event", "Total Number of Systems", "Duration", "Number of Disconnections", "Number of Curtailments", "Number of Ride Through","AS4777.2:2015 Disconnections", 
+                          "AS4777.3:2005 Disconnections","Transition Disconnections","AS4777.2:2015 Curtailment", "AS4777.2:2005 Curtailment", "Transition Curtailment", 
+                          "Maximum Voltage Observed", "Minumum Voltage Observed")
 
 Final_output <- rbind(Final_output, temp.final)
 
@@ -327,6 +334,7 @@ rm(list="Final_clean", "draft_output", "g","g1","g2", "g3", "p1", "p2", "p3")
 
 }
 
+setwd("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/ToAnalyse/")
 write.csv(Final_output, "Final_output.csv")
 
 #   
