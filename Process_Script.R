@@ -16,11 +16,14 @@ Cat5_PL_perc <- 0.75
 Cat6_PL_perc <- 0.1
 #As a value in kW
 #Category 7: Disconnect
-Cat7_Disconnect_kW=0.1
+Cat7_Disconnect_kW=0.05
 Cat8_Disconnect_kW=0
 
+
+Final_output <- NULL
+
 for (i in input.file.name){
-  
+  setwd("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/ToAnalyse/")
 dir.create(file.path(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/ToAnalyse/",substr(i,1,22))))
 
 EventTime <- ymd_hms(paste0(substr(i, 6, 15)," ",substr(i, 17, 18),":",substr(i, 19, 20),":",substr(i, 21, 22)), tz="Australia/Brisbane")
@@ -37,8 +40,9 @@ Final_clean <- Final_clean %>%
   mutate(Standard_Version = ifelse(pv_install_date_day<"2015-10-09", "AS4777.3:2005", ifelse(pv_install_date_day>="2016-10-09", "AS4777.2:2015", "Transition"))) %>% 
   mutate(DC.Rating.kW.= DC.Rating.kW./1000) %>% 
   mutate(Size = ifelse(DC.Rating.kW.<30, "<30 kW", ifelse(DC.Rating.kW.<=100, "30-100kW", ">100kW"))) %>% 
-  subset(select = -duration) %>% 
-  na.omit()
+  mutate(Duration = durn)
+  # subset(select = -duration) %>% 
+  # na.omit()
 
 #README: This script is designed to Process a Cleaned Data Set to Evaluate the Number of Disconnections.
 
@@ -56,7 +60,7 @@ print(paste("Number of unique ids in data set", length(unique(Final_clean$c_id))
 
 print(paste("Number of rows selected", nrow(temp.power_t0), "this is made up of", length(unique(temp.power_t0$c_id)), "unique ids"))
 
-Print("Please confirm these values match")
+print("Please confirm these values match")
 
 #Change Column Names
 colnames(temp.power_t0)[colnames(temp.power_t0)=="power_kW"] <- "p_0"
@@ -118,7 +122,7 @@ temp.category <- temp.ramp.diff %>%
                                                                      "Not categorised")))))))) %>% 
   mutate(Category_basic = ifelse(Category=="Category 7 - Disconnect", "Category 7 - Disconnect",
                                  ifelse(Category=="Category 1 - Ride Through", "Category 1 - Ride Through",
-                                        "Category 2-6 - Curtailment"))) 
+                                        "Category 2-6 - Curtailment")))
 
 
 ####OUTPUTS######
@@ -126,23 +130,45 @@ temp.category <- temp.ramp.diff %>%
 
 setwd(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/ToAnalyse/",substr(i,1,22)))
 
+temp.duration <- Final_clean[1,c("Duration")] 
+
 temp.category.table1 <- temp.category %>% 
   group_by(Category_basic,c_id) %>% 
   summarise(count =n()) %>% 
   group_by(Category_basic) %>% 
-  summarise(count = n())
+  summarise(count = n()) 
+  
 
 temp.category.table2 <- temp.category %>% 
-  group_by(Category,c_id) %>% 
+  group_by(t0, Category,c_id) %>% 
   summarise(count =n()) %>% 
-  group_by(Category) %>% 
+  group_by(t0, Category) %>% 
   summarise(count = n())
 
-temp.total <- temp.category.table2 %>% 
-  summarise(sum=sum(count))
+temp.final4 <- temp.category.table2 %>% 
+  group_by(t0) %>% 
+  summarise(TotalNumberSystems=sum(count)) %>% 
+  mutate(Location = ifelse(substr(i,1,4)=="4500", "Brendale - 4500",
+                           ifelse(substr(i,1,4)=="4701", "Parkhurst Norman - 4701",
+                                  ifelse(substr(i,1,4)=="4551", "Currimundi - 4551",
+                                         ifelse(substr(i,1,4)=="4555", "Palmwoods Central - 4555",
+                                                ifelse(substr(i,1,4)=="7050", "Kingston - 7050",
+                                                "Unknown Postcode")))))) %>% 
+  mutate(Duration = temp.duration) %>% 
+  .[,c(3,1,2,4)]
+
+
+temp.final5 <- temp.final4 %>% 
+  mutate(Disconnect = filter(temp.category.table1, Category_basic=="Category 7 - Disconnect")$count) %>% 
+  mutate(Curtail = filter(temp.category.table1, Category_basic=="Category 2-6 - Curtailment")$count)
+
+temp.totalsum <- temp.category.table2 %>% 
+  group_by(t0) %>% 
+  summarise(Total=sum(count))
 
 temp.category.table2 <- temp.category.table2 %>% 
-  mutate(Proportion_Percent = (count/temp.total$sum)*100)
+  mutate(Total= temp.totalsum$Total) %>% 
+  mutate(Proportion_Percent = (count/Total)*100)
 
 write.csv(temp.category.table2, paste0("Response_type_", substr(i, 1,15), ".csv"))
 
@@ -246,6 +272,18 @@ temp.b <- temp.output %>%
 
 ggplot(data = temp.b, aes(x = Standard_Version, y=Count, fill = Category_basic))+
   geom_bar(stat = "identity")
+  
+
+temp.final2 <- temp.final5 %>% 
+  mutate(DisconnectAS2015=ifelse(is.empty(filter(temp.b, Category_basic =="Category 7 - Disconnect" & Standard_Version =="AS4777.2:2015")$Count),0,filter(temp.b, Category_basic =="Category 7 - Disconnect" & Standard_Version =="AS4777.2:2015")$Count),
+         DisconnectAS2005=ifelse(is.empty(filter(temp.b, Category_basic =="Category 7 - Disconnect" & Standard_Version =="AS4777.3:2005")$Count),0,filter(temp.b, Category_basic =="Category 7 - Disconnect" & Standard_Version =="AS4777.3:2005")$Count),
+         DisconnectTranstn=ifelse(is.empty(filter(temp.b, Category_basic =="Category 7 - Disconnect" & Standard_Version =="Transition")$Count),0, filter(temp.b, Category_basic =="Category 7 - Disconnect" & Standard_Version =="Transition")$Count),
+          CurtailAS2015=ifelse(is.empty(filter(temp.b, Category_basic =="Category 2-6 - Curtailment" & Standard_Version =="AS4777.2:2015")$Count),0, filter(temp.b, Category_basic =="Category 2-6 - Curtailment" & Standard_Version =="AS4777.2:2015")$Count),
+          CurtailAS2005=ifelse(is.empty(filter(temp.b, Category_basic =="Category 2-6 - Curtailment" & Standard_Version =="AS4777.3:2005")$Count),0,filter(temp.b, Category_basic =="Category 2-6 - Curtailment" & Standard_Version =="AS4777.3:2005")$Count),
+          CurtailTranstn=ifelse(is.empty(filter(temp.b, Category_basic =="Category 2-6 - Curtailment" & Standard_Version =="Transition")$Count),0,filter(temp.b, Category_basic =="Category 2-6 - Curtailment" & Standard_Version =="Transition")$Count)) %>% 
+  mutate(Disconnections = paste(round(Disconnect/TotalNumberSystems*100,2), "% of total systems (AS4777:2015 -", DisconnectAS2015, "systems, Transition - ", DisconnectTranstn, "systems, AS4777.3:2005 -", DisconnectAS2005, "systems)")) %>% 
+  mutate(Curtailments = paste(round(Curtail/TotalNumberSystems*100,2), "% of total systems (AS4777:2015 -", CurtailAS2015, "systems, Transition - ", CurtailTranstn, "systems, AS4777.3:2005 -", CurtailAS2005, "systems)")) %>% 
+  .[,c(1:6,13,14)]
 
 temp.d <- temp.b %>% 
   group_by(Standard_Version) %>% 
@@ -263,9 +301,33 @@ ggsave(paste0("BarChart_Rsponse_byStandard_",substr(i, 6,22),".jpeg"), plot=last
 
 write.csv(temp.output, paste0("Output_",substr(i, 6,22),".csv"))
 
+temp.final3 <- temp.final2 %>%
+  mutate(MaxVoltage=max(filter(draft_output, ts>=EventTime & ts<=(EventTime+ minutes(2)) & Category_basic=="Category 7 - Disconnect")$voltage)) %>% 
+  mutate(MinVoltage=min(filter(draft_output, ts>=EventTime & ts<=(EventTime+ minutes(2)) & Category_basic=="Category 7 - Disconnect")$voltage)) %>% 
+  mutate(MaximumVoltage = paste(round(MaxVoltage,2), "V (", round(MaxVoltage/240,2), "pu)")) %>% 
+  mutate(MinimumVoltage = paste(round(MinVoltage,2), "V (", round(MinVoltage/240,2), "pu)")) %>% 
+  .[,c(1:8,11,12)]
+
+temp.final <- temp.final3
+
+colnames(temp.final) <- c("Location", "Time of Event", "Total Number of Systems", "Number of Disconnections", "Number of Curtailments", "Disconnections Summary", 
+                          "Curtailments Summary", "Maximum Voltage Observed", "Minumum Voltage Observed")
+
+Final_output <- rbind(Final_output, temp.final)
+
+# write.csv(draft_output, "TimeSeriesOutput.csv")
+# Aggregate_output <- draft_output %>% 
+#   group_by(ts) %>% 
+#   summarise(Power = sum(power_kW))
+# write.csv(Aggregate_output, "Aggregate_TimeSeriesOutput.csv")
+
+
+rm(list=ls(pattern="temp."))
+rm(list="Final_clean", "draft_output", "g","g1","g2", "g3", "p1", "p2", "p3")
+
 }
 
-
+write.csv(Final_output, "Final_output.csv")
 
 #   
 # temp.c <- temp.output %>%
