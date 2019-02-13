@@ -4,22 +4,26 @@ require("lubridate")
 require("ggplot2")
 require("reshape2")
 require("installr")
+library("gtable")
+library("grid")
+library("gridExtra")
 
 #Set Working Directory - have pulled this out as it will change with each data set.
-folder <- "qld_4551"
+folder <- "qld_4555"
+
+dir.create(file.path(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/",folder)))
+
 
 setwd(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/input/",folder))
-
 #Input the file name of each of the data sets
+
 Actual_Data_file <- "data_4551_2017_12_31.csv"
 
 Site_details_file <- list.files(pattern="site_details")
 
-Circuit_details_file <- "circuit_details_4551_updated.csv"
+Circuit_details_file <- "circuit_details_4555_updated.csv"
 
-
-EventTime <- "2017-12-31 14:22:57"
-
+EventTime <- "2018_02_11 16:28:33"
 
 #Run through each Process
 #1. Read, Format and Join Data Files

@@ -5,7 +5,7 @@
 
 #Read in PV Script or suggest re-running Join Script
 
-setwd(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/",folder))
+setwd(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/",folder, "/",data.date))
 
 ##Find and Read in PV File
 pv.file.name <- list.files(pattern="_PVData.csv")
@@ -51,11 +51,13 @@ temp.duration.lost <- anti_join(temp.duration, temp.duration.keep,  by = c("c_id
 
 if(nrow(temp.duration.lost)>0) {
   P1 = ggplot(temp.duration.lost, aes(ts, energy_polarity))+
-        geom_line()+
+        geom_point()+
         facet_wrap(~c_id)+
         ggtitle("List of Systems that have been removed due to Sampling Duration")
 
   ggplot2::ggsave(paste0(substr(pv.file.name, 1,15),"_Removed_DataPoints",".jpeg"), plot=P1, device="jpeg", scale=1)
+  
+  print(paste("Removed", length(unique(temp.duration.lost$c_id)), "systems due to Sampling duration"))
   
   }else(print("No systems removed due to Sampling Duration"))
   
@@ -86,15 +88,19 @@ temp.unclean <- left_join(temp.unclean_p0, temp.clean_duration, by="c_id")
 if(length(unique(temp.unclean$c_id))>1){
  P2a = ggplot(temp.unclean, aes(ts, power_kW))+
     geom_line()+
-    facet_wrap(~c_id)+
+    facet_wrap(~c_id, scales = "free_y")+
     ggtitle("List of Systems that have been removed from the data set as there is negative or low data")
   ggsave(paste0(substr(pv.file.name, 1,15),"_Removed_Negative",".jpeg"), plot=P2a, device="jpeg")
+  
+  print(paste("Removed", length(unique(temp.unclean$c_id)), "systems due to negative or low data"))
     
   } else if(length(unique(temp.unclean$c_id))==1){
     P2b = ggplot(temp.unclean, aes(ts, power_kW))+
         geom_line()+
         ggtitle("One System has been removed from the data set as there is negative or low  data")
     ggsave(paste0(substr(pv.file.name, 1,15),"_Removed_Negative",".jpeg"), P2b, device="jpeg")
+    
+    print(paste("Removed one system due to negative or low data"))
     
 } else(print("No systems removed from the data set for negative or no data"))
 
@@ -125,7 +131,7 @@ temp.unclean_2 <- left_join(temp.unclean_2_list, temp.clean_duration, by="c_id")
 
 if(nrow(temp.unclean_2)>0) {
  P3 = ggplot(temp.unclean_2, aes(ts, power_kW))+
-      geom_line()+
+      geom_point()+
       facet_wrap(~c_id)+
       ggtitle("List of Systems that have been removed from the data set as there is data outside of daylight hours")
 
@@ -144,12 +150,15 @@ if (as.numeric(temp.file.duration$Avg_duration, units="secs")==60){
     summarise(rows=n()) %>% 
     filter(rows<8)
   
+  print(paste("Removed", length(unique(temp.unclean_rows$c_id)), "systems due to datapoints during the event"))
   
 } else if (as.numeric(temp.file.duration$Avg_duration, units="secs")==30){
   temp.unclean_rows <- filter(temp.clean_2, ts>=(EventTime-minutes(5)) & ts<=(EventTime+minutes(5))) %>% 
     group_by(c_id) %>% 
     summarise(rows=n()) %>% 
     filter(rows>25 |rows<15)
+  
+  print(paste("Removed", length(unique(temp.unclean_rows$c_id)), "systems due to datapoints during the event"))
   
 } else (print("Insufficient Data to determine if there are sufficent data points during the event"))
 
@@ -158,8 +167,8 @@ if (as.numeric(temp.file.duration$Avg_duration, units="secs")==60){
 temp.unclean_3 <- left_join(temp.unclean_rows, temp.clean_duration, by="c_id")
 
 if(nrow(temp.unclean_3)>0) {
-P4 = ggplot(filter(temp.unclean_3,ts>=(EventTime-minutes(5)) & ts<=(EventTime+minutes(5))) , aes(ts, power_kW))+
-  geom_line()+
+P4 = ggplot(filter(temp.unclean_3,ts>=(EventTime-minutes(1)) & ts<=(EventTime+minutes(2))) , aes(ts, power_kW))+
+  geom_point()+
   facet_wrap(~c_id)+
   ggtitle("List of Systems that have been removed from the data set as there too many or not enough data points during the event")
 
@@ -168,6 +177,30 @@ ggsave(paste0(substr(pv.file.name, 1,15),"_Removed_DataPoints",".jpeg"), plot=P4
 
 temp.clean_3 <- anti_join(temp.clean_2, temp.unclean_3, by="c_id")
 
+
+# ###NEEED TO MANUALLY ENTER THESEE C_IDs. 
+# temp.visualcheck.remove <- c("272820342",
+#                              "1911860743",
+#                              "664843639",
+#                              "1845723828",
+#                              "1087659284",
+#                              "1779603813")
+# 
+# temp.unclean_4 <- temp.clean_3 %>%
+#   filter(c_id %in% temp.visualcheck.remove)
+# 
+# P6 = ggplot(temp.unclean_4, aes(ts, power_kW))+
+#   geom_line()+
+#   facet_wrap(~c_id, scales = "free_y")+
+#   ggtitle("List of systems that have been removed following a visual check")
+# 
+# ggsave(paste0(substr(pv.file.name, 1,15),"_Cleaned_VisualCheck",".jpeg"), plot=P6, device="jpeg")
+# 
+# temp.clean_3 <- temp.clean_3 %>%
+#   filter(!c_id %in% temp.visualcheck.remove)
+
+# 
+# Final_clean <- temp.clean_3
 
 
 if (length(unique(temp.clean_3$c_id))>25){
@@ -197,8 +230,11 @@ if (length(unique(temp.clean_3$c_id))>25){
     P5c = ggplot(temp.filter.time, aes(ts, power_kW))+
       geom_line()+
       facet_wrap(~c_id, scales = "free_y")+
-      ggtitle(paste("List of all systems after data has been cleaned", i, "of", numberOutputs, "Zoom"))
-    
+      ggtitle(paste("List of all systems after data has been cleaned", i, "of", numberOutputs, "Zoom"))+
+      geom_vline(xintercept = EventTime, linetype="dashed")
+      # geom_vline(xintercept = ymd_hms(EventTime2, tz="Australia/Brisbane"), linetype="dashed")+
+      # geom_vline(xintercept = ymd_hms(EventTime3, tz="Australia/Brisbane"), linetype="dashed")
+      
     ggsave(paste0(substr(pv.file.name, 1,15),"_Cleaned_Datapoints",i,"of",numberOutputs,"Zoom",".jpeg"), plot=P5c, device="jpeg")
     
   }
@@ -211,19 +247,21 @@ if (length(unique(temp.clean_3$c_id))>25){
   
   ggsave(paste0(substr(pv.file.name, 1,15),"_Cleaned_Datapoints",".jpeg"), plot=P5a, device="jpeg")
   
-  temp.filter.time = temp.clean_3 %>% 
+  temp.filter.time = temp.clean_4 %>% 
     filter(ts>=(EventTime-minutes(5)) & ts<=(EventTime+minutes(5)))
   
-  P5d = ggplot(temp.filter.time, aes(ts, power_kW))+
-    geom_line()+
+  P5d = ggplot(temp.filter.time, aes(ts, power_kw))+
+    geom_point()+
     facet_wrap(~c_id, scales = "free_y")+
+    geom_vline(xintercept = EventTime, linetype="dashed")+
     ggtitle(paste("List of all systems after data has been cleaned", i, "of", numberOutputs, "Zoom"))
   
   ggsave(paste0(substr(pv.file.name, 1,15),"_Cleaned_Datapoints",i,"of",numberOutputs,"Zoom",".jpeg"), plot=P5d, device="jpeg")
   
 } else (print("No clean files to plot"))
 
-Final_clean <- temp.clean_3
+
+
 
 file.name <- substr(max(unlist(strsplit(Actual_Data_file, "/"))),6,20)
 write.csv(Final_clean, paste0(file.name, "_cleaned.csv"))
