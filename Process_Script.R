@@ -124,7 +124,8 @@ temp.category <- temp.ramp.diff %>%
                                  ifelse(Category=="Category 1 - Ride Through", "Category 1 - Ride Through",
                                         "Category 2-6 - Curtailment")))
 
-
+  
+Categorised <- temp.category
 ####OUTPUTS######
 ###Print CSV of Category Types
 
@@ -137,7 +138,7 @@ temp.category.table1 <- temp.category %>%
   summarise(count =n()) %>% 
   group_by(Category_basic) %>% 
   summarise(count = n()) 
-  
+
 
 temp.category.table2 <- temp.category %>% 
   group_by(t0, Category,c_id) %>% 
