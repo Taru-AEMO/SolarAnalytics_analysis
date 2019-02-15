@@ -16,12 +16,12 @@ dir.create(file.path(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis
 
 setwd(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/input/",folder))
 #Input the file name of each of the data sets
-Actual_Data_file <- "data_4555_2018_02_11.csv"
+
+Actual_Data_file <- "data_4551_2017_12_31.csv"
 
 Site_details_file <- list.files(pattern="site_details")
 
 Circuit_details_file <- "circuit_details_4555_updated.csv"
-
 
 EventTime <- "2018_02_11 16:28:33"
 
