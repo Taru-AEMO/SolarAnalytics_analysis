@@ -4,9 +4,9 @@
 setwd("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/ToAnalyse/")
 
 
-# input.file.name <- list.files(pattern="_cleaned.csv")
+input.file.name <- list.files(pattern="_cleaned.csv")
 
-input.file.name <- c("4555_2017_02_15_103639_cleaned.csv")
+# input.file.name <- c("4551_2018_01_01_151307_cleaned.csv")
 
 
 for (i in input.file.name){
@@ -214,14 +214,20 @@ for (c in c_ids) {
 
 
 ##### save list of all the systems that were plotted
-systems.identified <- temp.all_ids
+# systems.identified <- temp.all_ids
+
+systems.identified <- left_join(select(temp.all_ids,-plot),select(temp.v0_vnadir_v1_v2,c_id,v_0,pu_0,pu_nadir),by="c_id")
+
+systems.identified <- systems.identified%>%
+  mutate(nadir_delta=pu_nadir-pu_0)
+
 
 ##Print confirmation
 print(paste("Number of IDs saw voltage change near event time:", length(unique(temp.all_ids$c_id))))
 
 # print(paste("These IDs are:", (systems.identified), ""))
 
-write.csv(systems.identified,file=sprintf("%s/systems_ids.csv",file.name),row.names=TRUE)
+write.csv(systems.identified,file=sprintf("%s/%s_systems_ids.csv",file.name,file.name),row.names=TRUE)
 
 
 
