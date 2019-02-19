@@ -125,8 +125,11 @@ temp.category <- temp.ramp.diff %>%
                                         "Category 2-6 - Curtailment")))
 
   
-Categorised <- temp.category
 ####OUTPUTS######
+# ## rachel's output for use in the voltage script:
+# setwd(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/ToAnalyse/",substr(i,1,22)))
+# write.csv(temp.category, paste0("Response_type_", substr(i, 1,15), ".csv"))
+
 ###Print CSV of Category Types
 
 setwd(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/ToAnalyse/",substr(i,1,22)))
