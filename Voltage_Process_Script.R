@@ -4,12 +4,12 @@
 setwd("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/ToAnalyse/")
 
 
-# input.file.name <- list.files(pattern="_cleaned.csv")
+input.file.name <- list.files(pattern="_cleaned.csv")
 
-input.file.name <- c("4555_2018_02_11_162833_cleaned.csv",
-                     "4551_2018_01_01_151307_cleaned.csv",
-                     "4551_2018_01_19_093102_cleaned.csv",
-                     "4555_2016_12_25_102726_cleaned.csv")
+# input.file.name <- c("4555_2018_02_11_162833_cleaned.csv",
+#                      "4551_2018_01_01_151307_cleaned.csv",
+#                      "4551_2018_01_19_093102_cleaned.csv",
+#                      "4555_2016_12_25_102726_cleaned.csv")
 
 all.systems.events <- NULL
 all.systems <- NULL
@@ -398,7 +398,34 @@ for (c in c_ids) {
   
   #### close loop for (c in c_ids)
   
-  }
+}
+  
+  ############### BOXPLOTS
+  
+  temp.all.systems <- temp.all.systems%>%
+    mutate(Legend="All_Times")
+  
+  temp.all.systems.events <- temp.all.systems.events%>%
+    mutate(Legend="Disturbance")
+  
+  ##
+  temp.plot <- bind_rows(temp.all.systems,temp.all.systems.events)
+                         
+  ggplot(temp.plot,aes(Legend,delta_pu,fill=Legend))+
+    geom_boxplot(varwidth = FALSE, alpha=0.2) +
+    ggtitle(sprintf("change in p.u. for event: %s ",EventTime))+
+    scale_fill_brewer(palette="Set3")
+  
+  ggsave(sprintf("%s_boxplot_dist.png",file.name))
+  
+  ###
+  
+  ggplot(temp.plot,aes(Legend,p.u.,fill=Legend))+
+    geom_boxplot(varwidth = FALSE, alpha=0.2) +
+    ggtitle(sprintf("p.u. for event: %s ",EventTime))+
+    scale_fill_brewer(palette="Set3")
+  
+  ggsave(sprintf("%s_boxplot_dist_pu.png",file.name))
   
   ################## output a csv file which as the average and max pu_delta seen at each event -> DNSP.comp.events
   ### data for all systems for all events
@@ -430,33 +457,52 @@ for (c in c_ids) {
   # ggsave(filename=sprintf("%s/max_delta_density.png",file.name))
   
   
-  #### all systems for all events ### one is entire day data, one is event time data
+  #### all systems for all events ### one is entire day data, one is event time data ### this bit doesn't run because of RAM
   
-  all.systems <- bind_rows(all.systems,temp.all.systems)
-  
-  
-  all.systems.events <- bind_rows(all.systems.events,temp.all.systems.events)
+  # all.systems <- bind_rows(all.systems,temp.all.systems)
+  # 
+  # all.systems <- all.systems%>%
+  #   mutate(Legend="No_Disturbance")
+  # 
+  # 
+  # all.systems.events <- bind_rows(all.systems.events,temp.all.systems.events)
+  # 
+  # all.systems.events <- all.systems.events%>%
+  #   mutate(Legend="Disturbance")
   
   ############# close loop for (i in input.files)
   
   }
   
-#################### BOX PLOTS based on postcode
 
-# postcodes <- c("4701","4555","4551","4550")
-# postcodes <- 4701
+ 
+# #################### BOX PLOTS based on postcode #### this bit doesn't run because of RAM
+#   
+#   postcodes <- c("4701","4555","4551","4550")
+#   
+#   for (p in postcodes){
+#   temp.plot <- temp.filter%>%
+#     filter(pc==postcodes)%>%
+#     filter(Legend=="Disturbance")
 # 
-# for (p in postcodes){
-#   temp.filter <- all.systems.events%>%
-#     filter(pc==postcodes)
-#     # filter(pc==p)
+#   ggplot(temp.plot,aes(pc,delta_pu,colour=pc))+
+#     geom_boxplot(varwidth = TRUE, alpha=0.2) +
+#     scale_fill_brewer(palette="Set3")
 # 
-#   ggplot(temp.filter,aes(delta_pu))+
-#     geom_boxplot()
+#   ggsave("boxplot_dist.png")
+#   }
 # 
-#     }
+#   temp.plot <- temp.filter%>%
+#     filter(pc==postcodes)%>%
+#     filter(Legend=="No_Disturbance")
+#   
+#   ggplot(temp.plot,aes(pc,delta_pu,colour=pc))+
+#     geom_boxplot(varwidth = TRUE, alpha=0.2) +
+#     scale_fill_brewer(palette="Set3")
+#   
+#   ggsave("boxplot_nodist.png")
 
-
+  
 ########## write csv outputs
 
 # write.csv(DNSP.comp.events,file="DNSP_comp_events.csv")
@@ -464,6 +510,6 @@ for (c in c_ids) {
 
 ###
 
-# rm(list=ls(pattern="temp."))
+rm(list=ls(pattern="temp."))
 
 ############################################################################### SCRIPT END  
