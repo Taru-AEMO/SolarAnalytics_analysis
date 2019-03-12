@@ -20,7 +20,7 @@ con <- odbcConnect("WARE", uid = "", pwd = "")
 
 ###################################### read in events list .csv 
 ####### the csv must be filled in with the times / location for which you want to find the PV generating capacity
-####### if the postcode is not known input the region or subregion (the script will look to postcode first)
+####### if the postcode is not known input the subregion
 ####### please follow naming conventions: TAS / TASSOUTH / TASNORTH / QLD / QLDSOUTH / QLDNORTH / QLDCENTRAL / VIC / NSW / SA
 
 setwd("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/input/")

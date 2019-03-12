@@ -4,12 +4,9 @@
 setwd("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/ToAnalyse/")
 
 
-input.file.name <- list.files(pattern="_cleaned.csv")
+# input.file.name <- list.files(pattern="_cleaned.csv")
 
-# input.file.name <- c("4555_2018_02_11_162833_cleaned.csv",
-#                      "4551_2018_01_01_151307_cleaned.csv",
-#                      "4551_2018_01_19_093102_cleaned.csv",
-#                      "4555_2016_12_25_102726_cleaned.csv")
+input.file.name <- c("4555_2018_02_11_162833_cleaned.csv")
 
 all.systems.events <- NULL
 all.systems <- NULL
@@ -134,6 +131,17 @@ for (i in input.file.name){
   #   left_join(temp.volt_t1, by="c_id") %>%
   #   left_join(temp.volt_t2, by="c_id") 
   ############################################################## 
+  
+  ######################################### MULTUPLE SYSTEMS, TREND ANALYSIS
+  #### this section... 
+  
+  temp.aggregate <- temp.volt_t0
+  # what is looks compared to the normalised value (maybe the average of the last 10mins) maybe 3 categorised
+  # check this: 
+  # <180 , >260, must disconnect after 1 second. >265 must disconnect
+  
+  
+  
   
 ######################################### 3. FINDING SYSTEMS WITH SIGNIFICANT RAMP AT TIME OF EVENT ##################
 ######################## everything inside this loop is looking at individual systems
@@ -401,58 +409,60 @@ for (c in c_ids) {
 }
   
   ############### BOXPLOTS
+  ################## 
+  # temp.all.systems <- temp.all.systems%>%
+  #   mutate(Legend="All_Times")
+  # 
+  # temp.all.systems.events <- temp.all.systems.events%>%
+  #   mutate(Legend="Disturbance")
+  # 
+  # ##
+  # temp.plot <- bind_rows(temp.all.systems,temp.all.systems.events)
+  #                        
+  # ggplot(temp.plot,aes(Legend,delta_pu,fill=Legend))+
+  #   geom_boxplot(varwidth = FALSE, alpha=0.2) +
+  #   ggtitle(sprintf("change in p.u. for event: %s ",EventTime))+
+  #   scale_fill_brewer(palette="Set3")
+  # 
+  # ggsave(sprintf("%s_boxplot_dist.png",file.name))
+  # 
+  # ###
+  # 
+  # ggplot(temp.plot,aes(Legend,p.u.,fill=Legend))+
+  #   geom_boxplot(varwidth = FALSE, alpha=0.2) +
+  #   ggtitle(sprintf("p.u. for event: %s ",EventTime))+
+  #   scale_fill_brewer(palette="Set3")
+  # 
+  # ggsave(sprintf("%s_boxplot_dist_pu.png",file.name))
   
-  temp.all.systems <- temp.all.systems%>%
-    mutate(Legend="All_Times")
   
-  temp.all.systems.events <- temp.all.systems.events%>%
-    mutate(Legend="Disturbance")
-  
-  ##
-  temp.plot <- bind_rows(temp.all.systems,temp.all.systems.events)
-                         
-  ggplot(temp.plot,aes(Legend,delta_pu,fill=Legend))+
-    geom_boxplot(varwidth = FALSE, alpha=0.2) +
-    ggtitle(sprintf("change in p.u. for event: %s ",EventTime))+
-    scale_fill_brewer(palette="Set3")
-  
-  ggsave(sprintf("%s_boxplot_dist.png",file.name))
-  
-  ###
-  
-  ggplot(temp.plot,aes(Legend,p.u.,fill=Legend))+
-    geom_boxplot(varwidth = FALSE, alpha=0.2) +
-    ggtitle(sprintf("p.u. for event: %s ",EventTime))+
-    scale_fill_brewer(palette="Set3")
-  
-  ggsave(sprintf("%s_boxplot_dist_pu.png",file.name))
-  
+  ################## 
   ################## output a csv file which as the average and max pu_delta seen at each event -> DNSP.comp.events
   ### data for all systems for all events
-  
-  if(temp.dv<0){
-    
-    max.delta.all.systems <- min(temp.all.systems.events$delta_pu)
-    
-    temp.filter <- temp.all.systems.events%>%
-      filter(delta_pu<0)
-    
-    avg.delta.all.systems <- mean(temp.filter$delta_pu)
-  } else {
-    
-    max.delta.all.systems <- max(temp.all.systems.events$delta_pu)
-    
-    temp.filter <- temp.all.systems.events%>%
-      filter(delta_pu>0)
-    
-    avg.delta.all.systems <- mean(temp.filter$delta_pu)
-  }
-  
-  temp.DNSP.comp <- data.frame(event=EventTime,
-                               average.dip=avg.delta.all.systems,
-                               max.dip=max.delta.all.systems)
-  
-  DNSP.comp.events <- bind_rows(DNSP.comp.events,temp.DNSP.comp)
+  # 
+  # if(temp.dv<0){
+  #   
+  #   max.delta.all.systems <- min(temp.all.systems.events$delta_pu)
+  #   
+  #   temp.filter <- temp.all.systems.events%>%
+  #     filter(delta_pu<0)
+  #   
+  #   avg.delta.all.systems <- mean(temp.filter$delta_pu)
+  # } else {
+  #   
+  #   max.delta.all.systems <- max(temp.all.systems.events$delta_pu)
+  #   
+  #   temp.filter <- temp.all.systems.events%>%
+  #     filter(delta_pu>0)
+  #   
+  #   avg.delta.all.systems <- mean(temp.filter$delta_pu)
+  # }
+  # 
+  # temp.DNSP.comp <- data.frame(event=EventTime,
+  #                              average.dip=avg.delta.all.systems,
+  #                              max.dip=max.delta.all.systems)
+  # 
+  # DNSP.comp.events <- bind_rows(DNSP.comp.events,temp.DNSP.comp)
   # ggplot(agg.delta.all.systems,aes(abs_delta))+geom_density()
   # ggsave(filename=sprintf("%s/max_delta_density.png",file.name))
   
@@ -469,15 +479,16 @@ for (c in c_ids) {
   # 
   # all.systems.events <- all.systems.events%>%
   #   mutate(Legend="Disturbance")
-  
+  ################## 
   ############# close loop for (i in input.files)
   
   }
   
 
- 
+
 # #################### BOX PLOTS based on postcode #### this bit doesn't run because of RAM
-#   
+# ##################   
+#
 #   postcodes <- c("4701","4555","4551","4550")
 #   
 #   for (p in postcodes){
@@ -502,7 +513,7 @@ for (c in c_ids) {
 #   
 #   ggsave("boxplot_nodist.png")
 
-  
+################## 
 ########## write csv outputs
 
 # write.csv(DNSP.comp.events,file="DNSP_comp_events.csv")
@@ -510,6 +521,6 @@ for (c in c_ids) {
 
 ###
 
-rm(list=ls(pattern="temp."))
+# rm(list=ls(pattern="temp."))
 
 ############################################################################### SCRIPT END  
