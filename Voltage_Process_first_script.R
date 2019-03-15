@@ -15,6 +15,23 @@ EventTime <- ymd_hms(paste0(substr(i, 6, 15)," ",substr(i, 17, 18),":",substr(i,
 
 print(EventTime)
 
+#### load data frames
+
+load(file=paste0("volt_d0_",file.name,".R"))
+load(file=paste0("volt_t0_",file.name,".R"))
+
+temp.volt_t0 <- volt_t0
+Final_clean <- volt_d0
+
+
+t_0 <- EventTime
+t_end_estimate_nadir <- EventTime + minutes(4)
+t_end_nadir <- EventTime + minutes(2)
+t_prior <- EventTime - minutes(1)
+t_hourprior <- EventTime - hours(1)
+t_hourafter <- EventTime + hours(1)
+
+
 
 ######################################### FINDING SYSTEMS WITH SIGNIFICANT RAMP AT TIME OF EVENT ##################
 ######################## everything inside this loop is looking at individual systems

@@ -31,7 +31,8 @@ temp.events.csv <- read.csv("events_list_input.csv", header=TRUE)
 temp.events <- temp.events.csv%>%
   mutate(time_date=paste(date,time,sep=" "),
          ts=dmy_hms(time_date,tz="Australia/Brisbane"),
-         region=as.character(region))
+         region=as.character(region),
+         postcode=as.numeric(postcode))
 
 
 input.events <- rownames(temp.events)
@@ -56,22 +57,22 @@ temp.event <- temp.event%>%
   mutate(region_sql=ifelse(postcode<=2999 & postcode>=2000,"NSW1",
          ifelse(postcode<=3999 & postcode>=3000,"VIC1",
                 ifelse(postcode<=5999 & postcode>=5000,"SA1",
-                       ifelse(postcode<=4703 & postcode>=4999,"QLDNORTH",
-                              ifelse(postcode<=4601 & postcode>=4702,"QLDCENTRAL",
-                                     ifelse(postcode<=4000 & postcode>=4600,"QLDSOUTH","no valid postcode")))))))
+                       ifelse(postcode<=4999 & postcode>=4703,"QLDNORTH",
+                              ifelse(postcode<=4702 & postcode>=4601,"QLDCENTRAL",
+                                     ifelse(postcode<=4600 & postcode>=4000,"QLDSOUTH","no valid postcode")))))))
 }
-
-if(is.na(temp.event$region)==FALSE){
-
-temp.event <- temp.event%>%
-  mutate(region_sql=ifelse(region=="SA","SA1",
-                                 ifelse(region=="VIC","VIC1",
-                                        ifelse(region=="NSW","NSW1",
-                                               ifelse(region=="QLDSOUTH",region,
-                                                      ifelse(region=="QLDCENTRAL",region,
-                                                             ifelse(region=="QLDNORTH",region,
-                                                                    ("no valid region"))))))))
-}
+# 
+# if(is.na(temp.event$region)==FALSE){
+# 
+# temp.event <- temp.event%>%
+#   mutate(region_sql=ifelse(region=="SA","SA1",
+#                                  ifelse(region=="VIC","VIC1",
+#                                         ifelse(region=="NSW","NSW1",
+#                                                ifelse(region=="QLDSOUTH",region,
+#                                                       ifelse(region=="QLDCENTRAL",region,
+#                                                              ifelse(region=="QLDNORTH",region,
+#                                                                     ("no valid region"))))))))
+# }
 
 
 
@@ -182,7 +183,7 @@ mw <- temp.gen$`HH Daily Actual`
 
 ########## find PV capacity for that event/region
 
-re <- temp.event$region
+re <- temp.event$region_sql
 
 temp.cap <- temp.capacities%>%
   filter(region==re)
