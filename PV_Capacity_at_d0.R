@@ -29,6 +29,7 @@ temp.events.csv <- read.csv("events_list_input.csv", header=TRUE)
 
 
 temp.events <- temp.events.csv%>%
+  filter(date!="")%>%
   mutate(time_date=paste(date,time,sep=" "),
          ts=dmy_hms(time_date,tz="Australia/Brisbane"),
          region=as.character(region),
@@ -61,7 +62,9 @@ temp.event <- temp.event%>%
                               ifelse(postcode<=4702 & postcode>=4601,"QLDCENTRAL",
                                      ifelse(postcode<=4600 & postcode>=4000,"QLDSOUTH","no valid postcode")))))))
 }
-# 
+
+
+### of postcode not known
 # if(is.na(temp.event$region)==FALSE){
 # 
 # temp.event <- temp.event%>%
@@ -90,15 +93,16 @@ EstEventTime <-   round_date(EventTime, "30 minutes")
 Pre_EventTime <- gsub("-","/",paste(EstEventTime - days(1)))
 Post_EventTime <- gsub("-","/",paste(EstEventTime + days(1)))
 
-###################################### CER installed capacities per region
+###################################### CER installed capacities per region - needs to be updated quarterly
 
-temp.capacities <- data.frame(region=c("QLDNORTH","QLDCENTRAL","QLDSOUTH","NSW","VIC","SA","TASNORTH","TASSOUTH"),
+temp.capacities <- data.frame(region=c("QLDNORTH","QLDCENTRAL","QLDSOUTH","NSW1","VIC1","SA1","TASNORTH","TASSOUTH"),
                               cap_KW=c(398808,220950,1794489,1965772,1553691,1020921,70713,62911))
 
 temp.capacities <- temp.capacities%>%
   mutate(region=as.character(region),
          cap_MW=cap_KW*0.001)
 
+#
 # # region _ postcode _ capacity
 # # Queensland North	SGUPV_QLDNORTH	4703 - 4999	          398,808 
 # # Queensland Central	SGUPV_QLDCENTRAL	4601 - 4702		    220,950 
@@ -110,7 +114,7 @@ temp.capacities <- temp.capacities%>%
 # # Tasmania South	SGUPV_TASSOUTH	7000 - 7190		          62,911 
 # # Queensland total	SGUPV_QLD1	4000 - 4999		            2,414,247 
 # # Tasmania total	SGUPV_TAS1	7000 - 7999	  	            133,625 
-
+#
 
 
 ####################################### "HH Daily Actual"
