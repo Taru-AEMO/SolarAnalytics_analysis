@@ -207,13 +207,37 @@ save(summary.all,file="Event.find.summary_all_v4.R")
   # temp.short.sum <- summary.all%>%
   #   melt(,-threshold)
   
-  
-  
+
   #################### END
   
   # rm(list=ls(pattern="temp."))
   
-  #######################################################
+  ####################################################### PART 2
+
+setwd("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output")
+load(file="Event.find.summary_all_P_based.R")
+# load(file="Event.find.summary_all_delta_based.R")
+
+
+P_based <- summary.all
+# delta_based <- summary.all
+
+
+events <- unique(delta_based$actual.event)
+temp.bind <- NULL
+
+for (e in events){
   
+  temp.filter <- delta_based%>%
+    filter(actual.event==e)%>%
+    filter(positives==min(positives))
+  
+  temp.bind <- bind_rows(temp.bind,temp.filter)
+  
+}
+
+  
+
+
     
   

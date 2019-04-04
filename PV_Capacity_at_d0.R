@@ -61,21 +61,18 @@ temp.event <- temp.event%>%
                        ifelse(postcode<=4999 & postcode>=4703,"QLDNORTH",
                               ifelse(postcode<=4702 & postcode>=4601,"QLDCENTRAL",
                                      ifelse(postcode<=4600 & postcode>=4000,"QLDSOUTH","no valid postcode")))))))
+
+} else if(is.na(temp.event$region)==FALSE){
+
+temp.event <- temp.event%>%
+  mutate(region_sql=ifelse(region=="SA","SA1",
+                                 ifelse(region=="VIC","VIC1",
+                                        ifelse(region=="NSW","NSW1",
+                                               ifelse(region=="QLDSOUTH",region,
+                                                      ifelse(region=="QLDCENTRAL",region,
+                                                             ifelse(region=="QLDNORTH",region,
+                                                                    ("no valid region"))))))))
 }
-
-
-### of postcode not known
-# if(is.na(temp.event$region)==FALSE){
-# 
-# temp.event <- temp.event%>%
-#   mutate(region_sql=ifelse(region=="SA","SA1",
-#                                  ifelse(region=="VIC","VIC1",
-#                                         ifelse(region=="NSW","NSW1",
-#                                                ifelse(region=="QLDSOUTH",region,
-#                                                       ifelse(region=="QLDCENTRAL",region,
-#                                                              ifelse(region=="QLDNORTH",region,
-#                                                                     ("no valid region"))))))))
-# }
 
 
 
