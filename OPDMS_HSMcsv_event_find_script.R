@@ -12,8 +12,8 @@ library("Hmisc")
 
 ######## set thresholds for voltage and frequency pick ups
 
-v_min <- 0.8
-v_max <- 1.2
+v_min <- 0.95
+v_max <- 1.05
 
 ### NOFB
 f_min <- 49.85
@@ -34,6 +34,12 @@ setwd(paste0("C:/Users/RTandy/Documents/OPDMS Data/HSM/",d,""))
 
 monitor.file <- list.files()
 # monitor.file <- "DUMARESQ"
+
+
+# find specific monitors
+# find.monitors <- c("H2_SPINE","H13_ROSS","RCTS","BETS","CBTS","TSTS","FBTS","BLTS")
+# monitor.file <- monitor.file[monitor.file %in% find.monitors]
+
 
 #### start loop for monitor files
 for (m in monitor.file){
@@ -60,7 +66,7 @@ for (i in input.csv.name){
 
   
     ##### if occured during daytime then read data
-  if (temp.time<="19:00:00" & temp.time >="08:00:00"){
+  # if (temp.time<="19:00:00" & temp.time >="08:00:00"){
   
     # print("daytime condition satisfied")
     
@@ -78,11 +84,22 @@ for (i in input.csv.name){
     
   temp.headers.csv <- read.table(file=i,nrows=1,skip=8,sep=",",header=TRUE)
   
+  
+  ##### average of 3 phases
+  # temp.headers <- temp.headers.csv%>%
+  #   gather(head1,head2)%>%
+  #   mutate(key=paste(head1,head2,sep="_"),
+  #          pull=ifelse(grepl("PPS",key) & grepl("kV",key), 1,
+  #                      ifelse(grepl("Hz",key), 1, 0)))
+  
+  
+  #### multiple phases
   temp.headers <- temp.headers.csv%>%
     gather(head1,head2)%>%
     mutate(key=paste(head1,head2,sep="_"),
-           pull=ifelse(grepl("PPS",key) & grepl("kV",key), 1,
+           pull=ifelse(grepl("kV",key), 1,
                        ifelse(grepl("Hz",key), 1, 0)))
+  
   
   
   ### specify columns to read
@@ -146,9 +163,10 @@ for (i in input.csv.name){
                pu=ifelse(is.nan(kV_sq/temp.nominal.volt),NA,
                          ifelse(is.infinite(kV_sq/temp.nominal.volt),NA,
                                 kV_sq/temp.nominal.volt)),
-               plot_v=ifelse(is.na(pu),0,
-                             ifelse(pu>v_max,1,
-                                    ifelse(pu<v_min,1,0))))
+               lag_pu=lag(pu),
+               d_pu=pu-lag_pu,
+               plot_v=ifelse(is.na(d_pu),0,
+                             ifelse(d_pu>0.1,1,0)))
 
       temp.key <- temp.key.save[temp.k]
 
@@ -257,7 +275,7 @@ for (i in input.csv.name){
   }
 
   #### close daytime if statement
-  }
+  # }
   
   rm(list=ls(pattern="temp."))
   #### close loops 
@@ -271,5 +289,12 @@ rm(list=ls(pattern="temp."))
 
 setwd("C:/Users/RTandy/Documents/OPDMS Data")
 save(output.events,file=gsub(":","",gsub(" ","_",paste0("Event_search_",Sys.time(),".R"))))
+write.csv(output.events,file=gsub(":","",gsub(" ","_",paste0("Event_search_",Sys.time(),".csv"))))
   
 ##### end
+
+
+temp.output.events <- filter(output.events,min.volt>0)
+
+
+

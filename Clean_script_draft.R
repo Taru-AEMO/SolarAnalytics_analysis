@@ -179,12 +179,7 @@ temp.clean_3 <- anti_join(temp.clean_2, temp.unclean_3, by="c_id")
 
 
 # ###NEEED TO MANUALLY ENTER THESEE C_IDs. 
-# temp.visualcheck.remove <- c("272820342",
-#                              "1911860743",
-#                              "664843639",
-#                              "1845723828",
-#                              "1087659284",
-#                              "1779603813")
+# temp.visualcheck.remove <- c("117737")
 # 
 # temp.unclean_4 <- temp.clean_3 %>%
 #   filter(c_id %in% temp.visualcheck.remove)
@@ -198,7 +193,7 @@ temp.clean_3 <- anti_join(temp.clean_2, temp.unclean_3, by="c_id")
 # 
 # temp.clean_3 <- temp.clean_3 %>%
 #   filter(!c_id %in% temp.visualcheck.remove)
-
+# 
 # 
 # Final_clean <- temp.clean_3
 
@@ -247,10 +242,10 @@ if (length(unique(temp.clean_3$c_id))>25){
   
   ggsave(paste0(substr(pv.file.name, 1,15),"_Cleaned_Datapoints",".jpeg"), plot=P5a, device="jpeg")
   
-  temp.filter.time = temp.clean_4 %>% 
+  temp.filter.time = temp.clean_3 %>% 
     filter(ts>=(EventTime-minutes(5)) & ts<=(EventTime+minutes(5)))
   
-  P5d = ggplot(temp.filter.time, aes(ts, power_kw))+
+  P5d = ggplot(temp.filter.time, aes(ts, power_kW))+
     geom_point()+
     facet_wrap(~c_id, scales = "free_y")+
     geom_vline(xintercept = EventTime, linetype="dashed")+

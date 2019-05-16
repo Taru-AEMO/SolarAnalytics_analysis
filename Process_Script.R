@@ -34,6 +34,15 @@ print(EventTime)
 Final_clean <- read.csv(i, header=TRUE, stringsAsFactors = FALSE) %>%
   mutate(ts = ymd_hms(ts, tz="Australia/Brisbane"))
 
+## test edit 20190502
+if(any(names(Final_clean) == "ac")){
+  colnames(Final_clean)[colnames(Final_clean)=="ac"] <- "AC.Rating.kW."
+}
+if(any(names(Final_clean) == "dc")){
+  colnames(Final_clean)[colnames(Final_clean)=="dc"] <- "DC.Rating.kW."
+}
+###
+
 Final_clean <- Final_clean %>% 
   mutate(pv_install_date_day=ifelse(nchar(pv_install_date)==10,pv_install_date, paste0(pv_install_date, "-28"))) %>%
   mutate(pv_install_date_day=ymd(pv_install_date_day)) %>%
@@ -65,6 +74,12 @@ print("Please confirm these values match")
 #Change Column Names
 colnames(temp.power_t0)[colnames(temp.power_t0)=="power_kW"] <- "p_0"
 colnames(temp.power_t0)[colnames(temp.power_t0)=="ts"] <- "t0"
+
+
+###temp edit 20190502
+temp.power_t0 <- temp.power_t0 %>% 
+  filter(t0==median(t0))
+###
 
 
 #Filter for possible Nadir time then identify the T_Nadir and identify power at this time

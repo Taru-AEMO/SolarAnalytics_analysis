@@ -1,6 +1,10 @@
 
 ##### this script is for finding the % at which PV is generating as a specific time, i.e. time of disturbance
 
+
+
+##### don't load "chron" packages because it interfers with this script/lubridate #####
+
 library("stringr")
 library("plyr")
 library("RODBC")
@@ -71,7 +75,9 @@ temp.event <- temp.event%>%
                                                ifelse(region=="QLDSOUTH",region,
                                                       ifelse(region=="QLDCENTRAL",region,
                                                              ifelse(region=="QLDNORTH",region,
-                                                                    ("no valid region"))))))))
+                                                                    ifelse(region=="TASNORTH",region,
+                                                                           ifelse(region=="TASSOUTH",region,
+                                                                                  ("no valid region"))))))))))
 }
 
 
@@ -83,12 +89,17 @@ EventTime <- (temp.event$ts)
 
 ####
 
+
 EstEventTime <-   round_date(EventTime, "30 minutes")
+
+# temp <- as_datetime(gsub("-","/",EstEventTime))
+# temp.Pre_EventTime <- (EstEventTime - days(1))
+# temp.Post_EventTime <- (EstEventTime - days(1))
 
 #### format for SQL inputs
 
-Pre_EventTime <- gsub("-","/",paste(EstEventTime - days(1)))
-Post_EventTime <- gsub("-","/",paste(EstEventTime + days(1)))
+Pre_EventTime <- gsub("-","/",paste(EstEventTime - lubridate::days(1)))
+Post_EventTime <- gsub("-","/",paste(EstEventTime + lubridate::days(1)))
 
 ###################################### CER installed capacities per region - needs to be updated quarterly
 
@@ -209,7 +220,7 @@ output <- bind_rows(output,temp.output)
 ########## csv output
 
 setwd("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/")
-write.csv(output,"events_list_PVcap_output.csv")
+write.csv(output,gsub(":","",paste0("events_list_PVcap_output_",Sys.time(),".csv")))
 
 rm(list=ls(pattern="temp."))
 

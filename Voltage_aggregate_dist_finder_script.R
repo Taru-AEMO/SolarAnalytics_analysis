@@ -22,7 +22,7 @@ file.name <- list.files()
 #                "4555_2018_02_11_162833", "4701_2018_10_13_122400", "4701_2018_10_13_123900")
 
 
-# summary.all <- NULL
+summary.all <- NULL
 
 #### start loop
 for (i in file.name){
@@ -213,28 +213,28 @@ save(summary.all,file="Event.find.summary_all_v4.R")
   # rm(list=ls(pattern="temp."))
   
   ####################################################### PART 2
-
-setwd("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output")
-load(file="Event.find.summary_all_P_based.R")
-# load(file="Event.find.summary_all_delta_based.R")
-
-
-P_based <- summary.all
-# delta_based <- summary.all
-
-
-events <- unique(delta_based$actual.event)
-temp.bind <- NULL
-
-for (e in events){
-  
-  temp.filter <- delta_based%>%
-    filter(actual.event==e)%>%
-    filter(positives==min(positives))
-  
-  temp.bind <- bind_rows(temp.bind,temp.filter)
-  
-}
+# 
+# setwd("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output")
+# load(file="Event.find.summary_all_P_based.R")
+# # load(file="Event.find.summary_all_delta_based.R")
+# 
+# 
+# P_based <- summary.all
+# # delta_based <- summary.all
+# 
+# 
+# events <- unique(delta_based$actual.event)
+# temp.bind <- NULL
+# 
+# for (e in events){
+#   
+#   temp.filter <- delta_based%>%
+#     filter(actual.event==e)%>%
+#     filter(positives==min(positives))
+#   
+#   temp.bind <- bind_rows(temp.bind,temp.filter)
+#   
+# }
 
   
 

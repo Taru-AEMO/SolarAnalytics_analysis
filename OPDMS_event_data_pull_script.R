@@ -1,18 +1,22 @@
 ####################################################################
 ################################### this script will pull all the data for the events found in OPDMS_csv_processing.R
 
-setwd("C:/Users/RTandy/Documents/OPDMS Data/manual files")
-
-load("Event_search_2019-03-26_153412.R")
+# setwd("C:/Users/RTandy/Documents/OPDMS Data/manual files")
+# 
+# load("Event_search_2019-03-26_153412.R")
 
 
 #################################################
  ###### PULL data for events
 
-temp.events.to.plot <- output.events
-  
-  # filter(date=="03/03/2019")
+temp.events.to.plot <- output.events%>%
+  filter(date!="25/08/2018")%>%
+  mutate(date=dmy(date))%>%
+  arrange(date.time)%>%
+  filter(min.freq<56 | is.na(min.freq),min.volt!=0.5 | is.na(min.volt),max.volt!=2 | max.volt!=1.5 | is.na(max.volt))
 
+
+write.csv(temp.events.to.plot,file=gsub(":","",gsub(" ","_",paste0("Event_search_",Sys.time(),".csv"))))
 ######
 
 dates <- unique(temp.events.to.plot$date)
