@@ -30,72 +30,72 @@ date.file <- list.files()
 #### start loop for date files
 for (d in date.file){
   
-setwd(paste0("C:/Users/RTandy/Documents/OPDMS Data/HSM/",d,""))
-
-monitor.file <- list.files()
-# monitor.file <- "DUMARESQ"
-
-
-# find specific monitors
-# find.monitors <- c("H2_SPINE","H13_ROSS","RCTS","BETS","CBTS","TSTS","FBTS","BLTS")
-# monitor.file <- monitor.file[monitor.file %in% find.monitors]
-
-
-#### start loop for monitor files
-for (m in monitor.file){
-
-setwd(paste0("C:/Users/RTandy/Documents/OPDMS Data/HSM/",d,"/",m,""))
-
-input.csv.name <- list.files()
-# input.csv.name <- "20180825-1515-NSW-DUMARESQ-DMQ_DISTURBANCE.csv"
-
-#### start loop for input csvs
-for (i in input.csv.name){
+  setwd(paste0("C:/Users/RTandy/Documents/OPDMS Data/HSM/",d,""))
   
-  #### read details and time date format fix
-  temp.csv <- read.csv(file=i, header = FALSE)
+  monitor.file <- list.files()
+  # monitor.file <- "DUMARESQ"
   
-  temp.time <- paste(temp.csv[5,2])
-  temp.date <- paste(temp.csv[4,2])
   
-  temp.time.date <- dmy_hms(paste(temp.date,temp.time,sep=" "),tz="Australia/Brisbane")
+  # find specific monitors
+  # find.monitors <- c("H2_SPINE","H13_ROSS","RCTS","BETS","CBTS","TSTS","FBTS","BLTS")
+  # monitor.file <- monitor.file[monitor.file %in% find.monitors]
   
-  temp.time <- strftime(temp.time.date, format ="%T", usetz=TRUE, tz="Australia/Brisbane")
   
-  print(paste0("",temp.time.date,""))
-
-  
-    ##### if occured during daytime then read data
-  # if (temp.time<="19:00:00" & temp.time >="08:00:00"){
-  
-    # print("daytime condition satisfied")
+  #### start loop for monitor files
+  for (m in monitor.file){
     
-    temp.region <- paste(temp.csv[1,2])
-    temp.station <- paste(temp.csv[2,2])
-    temp.monitor <- paste(temp.csv[3,2])
-    temp.date <- paste(temp.csv[4,2])
-    temp.start.time <- temp.time
-  
-  print(paste0("",temp.station,""))
-  #### searches by key terms for relevant columns in csv
-  temp.length.check <- read.csv(file=i)
-  ### if statement to avoid blank csvs
-  if (nrow(temp.length.check)>8){
+    setwd(paste0("C:/Users/RTandy/Documents/OPDMS Data/HSM/",d,"/",m,""))
     
-  temp.headers.csv <- read.table(file=i,nrows=1,skip=8,sep=",",header=TRUE)
-  
-  
-  ##### average of 3 phases
-  # temp.headers <- temp.headers.csv%>%
-  #   gather(head1,head2)%>%
-  #   mutate(key=paste(head1,head2,sep="_"),
-  #          pull=ifelse(grepl("PPS",key) & grepl("kV",key), 1,
-  #                      ifelse(grepl("Hz",key), 1, 0)))
-  
-  
-  #### multiple phases
-  temp.headers <- temp.headers.csv%>%
-    gather(head1,head2)%>%
+    input.csv.name <- list.files()
+    # input.csv.name <- "20180825-1515-NSW-DUMARESQ-DMQ_DISTURBANCE.csv"
+    
+    #### start loop for input csvs
+    for (i in input.csv.name){
+      
+      #### read details and time date format fix
+      temp.csv <- read.csv(file=i, header = FALSE)
+      
+      temp.time <- paste(temp.csv[5,2])
+      temp.date <- paste(temp.csv[4,2])
+      
+      temp.time.date <- dmy_hms(paste(temp.date,temp.time,sep=" "),tz="Australia/Brisbane")
+      
+      temp.time <- strftime(temp.time.date, format ="%T", usetz=TRUE, tz="Australia/Brisbane")
+      
+      print(paste0("",temp.time.date,""))
+      
+      
+      ##### if occured during daytime then read data
+      # if (temp.time<="19:00:00" & temp.time >="08:00:00"){
+      
+      # print("daytime condition satisfied")
+      
+      temp.region <- paste(temp.csv[1,2])
+      temp.station <- paste(temp.csv[2,2])
+      temp.monitor <- paste(temp.csv[3,2])
+      temp.date <- paste(temp.csv[4,2])
+      temp.start.time <- temp.time
+      
+      print(paste0("",temp.station,""))
+      #### searches by key terms for relevant columns in csv
+      temp.length.check <- read.csv(file=i)
+      ### if statement to avoid blank csvs
+      if (nrow(temp.length.check)>8){
+        
+        temp.headers.csv <- read.table(file=i,nrows=1,skip=8,sep=",",header=TRUE)
+        
+        
+        ##### average of 3 phases
+        # temp.headers <- temp.headers.csv%>%
+        #   gather(head1,head2)%>%
+        #   mutate(key=paste(head1,head2,sep="_"),
+        #          pull=ifelse(grepl("PPS",key) & grepl("kV",key), 1,
+        #                      ifelse(grepl("Hz",key), 1, 0)))
+        
+        
+        #### multiple phases
+        temp.headers <- temp.headers.csv%>%
+          gather(head1,head2)%>%
     mutate(key=paste(head1,head2,sep="_"),
            pull=ifelse(grepl("kV",key), 1,
                        ifelse(grepl("Hz",key), 1, 0)))

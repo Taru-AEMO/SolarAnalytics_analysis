@@ -1,3 +1,4 @@
+installed.packages("xlsx")
 require("dplyr")
 require("tidyr")
 require("lubridate")
@@ -22,12 +23,14 @@ underlying_data_file <- "E1_6_short_ud.csv"
 ## toggle upscaled data and save aggregated results from r shiny
 upscaled_aggregated_file <- "E1_6_short_upscaled_ar.csv"
 
-## event data, only one t0 can be input per analysis. multiple events can be input.
+####### event data, only one t0 can be input per analysis. multiple events can be input.
+###### don't deviate from formats
 event_date <- "20180415"
 
-t0 <- "07:51:55"
+### t0 is the interval immediately prior to event
+pre_event_interval <- "07:52:25"
 
-event_time <- c("07:52:25","07:53:55")
+event_time <- c("07:52:55","07:53:55")
 
 
 
@@ -41,9 +44,10 @@ source("RShiny_PostProcess_RawTables.R")
 ############# upscaled data analysis - tables
 
 setwd("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis")
-source("RShiny_PostProcess_UpscaledTables_Plots.R")
+source("RShiny_PostProcess_UpscaledTables.R")
 
 ############# data analysis - plots
+#######
 
 setwd("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis")
 source("RShiny_PostProcess_Plots.R")
