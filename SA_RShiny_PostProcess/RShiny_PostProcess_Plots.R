@@ -132,14 +132,19 @@ temp.plot$lab <- paste0("n=",temp.plot$n)
 
 p6 <- ggplot(temp.plot, aes(zone,perc_disc,colour=Standard_Version))+
   geom_bar(stat="identity",position="dodge",aes(fill=Standard_Version))+
+  scale_fill_manual(values=c("salmon1","slateblue2","seagreen3"))+
   labs(title="Percentage of PV that disconnected as a percentage of zone/standard groups",
        subtitle="'n' indicates the sample size for each zone/standard group")+
   ylab("Percentage of sites in sample that disconnected (%)")+
   xlab(NULL)+
   theme(legend.position="bottom")+
   geom_text(aes(label=lab,colour=Standard_Version),position=position_dodge(width=1),vjust=-.5,size=3)+
-  scale_colour_manual(values=c("black","black","black"))
+  scale_colour_manual(values=c("black","black","black"))+
+  ylim(limits = c(0, 100))
 
+
+
+plot(p6)
 
 ## remove temps
 rm(list=ls(pattern="temp"))
