@@ -63,15 +63,25 @@ actual_data1 <- actual_data1%>%
          voltage= as.numeric(v),
          frequency = as.numeric(f))
   
+
 actual_data1 <- actual_data1 %>% 
   mutate(c_id = as.integer(c_id))
-    
+
 
 site_details <-  read.csv(Site_details_file, header=TRUE, stringsAsFactors = FALSE) %>% 
   mutate(site_id=as.numeric(site_id))
 
-circuit_details <- read.csv(Circuit_details_file, header=TRUE, stringsAsFactors = FALSE)
+## test edit 20190502
+if(any(names(site_details) == "manufacturer")){
+  colnames(site_details)[colnames(site_details)=="manufacturer"] <- "inverter_manufacturer"
+}
+if(any(names(site_details) == "model")){
+  colnames(site_details)[colnames(site_details)=="model"] <- "inverter_model"
+}
+##
 
+
+circuit_details <- read.csv(Circuit_details_file, header=TRUE, stringsAsFactors = FALSE)
 
 ##Join all the data sets together, evaluate polarity, remove duplicates and calculate 
 actual_data_join <- left_join(actual_data1, circuit_details, by="c_id") %>% 
@@ -133,7 +143,8 @@ print("Please check that the above connection types have been appropriately acco
 load.list <- c("load_air_conditioner", "ac_load_net", "ac_load","load_other", 
                "load_pool","load_hot_water","load_stove","load_lighting",
                "load_office", "", "load_hot_water_solar", "load_powerpoint",
-               "load_refrigerator", "load_shed", "load_ev_charger", "load_machine")
+               "load_refrigerator", "load_shed", "load_ev_charger", "load_machine",
+               "load_common_area","load_garage","load_kitchen","load_tenant")
 
 
 
@@ -184,7 +195,8 @@ full.list <- c("load_air_conditioner", "ac_load_net", "ac_load","load_other",
                "load_pool","load_hot_water","load_stove","load_lighting",
                "load_office", "", "load_hot_water_solar", "load_powerpoint",
                "load_refrigerator", "load_shed", "load_ev_charger", 
-               "pv_site_net", "pv_site", "battery_storage", "load_machine")
+               "pv_site_net", "pv_site", "battery_storage", "load_machine",
+               "load_common_area","load_garage","load_kitchen","load_tenant")
 
 full.list.df <- as.data.frame(full.list)
 colnames(full.list.df) <- "con_type"
