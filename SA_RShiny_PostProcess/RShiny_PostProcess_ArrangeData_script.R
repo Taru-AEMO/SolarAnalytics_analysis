@@ -7,6 +7,7 @@ setwd(paste0("",directory,""))
 ## 1. read in csv and reformat both upscaled and underlying ####
 
 
+if(length(upscaled_aggregated_file)>0){
 ## UPSCALED
 up_ar <- read.csv(paste0(upscaled_aggregated_file))
 ## check for duplicate rows
@@ -21,6 +22,7 @@ pp_ar <- temp.distinct %>%
   dplyr::mutate(Time=ymd_hms(Time,tz="Australia/Brisbane"))
 
 rm(up_ar)
+}
 
 
 ## UNDERLYING
@@ -70,6 +72,9 @@ tx <- sapply(event_time,function(x) {
 savetime <- paste0(substr(pre_event_interval,1,2),substr(pre_event_interval,4,5),substr(pre_event_interval,7,8))
 
 
+
+
+if(length(upscaled_aggregated_file)>0){
 #### 3. upscaling calculations ####
 
 
@@ -113,5 +118,5 @@ upscaled_ts$response_category <- ordered(upscaled_ts$response_category, levels=c
 
 rm(list=ls(pattern="temp"))
 
-
+}
 ############ end ####

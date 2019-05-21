@@ -144,7 +144,7 @@ p6 <- ggplot(temp.plot, aes(zone,perc_disc,colour=Standard_Version))+
 
 
 
-plot(p6)
+# plot(p6)
 
 ## remove temps
 rm(list=ls(pattern="temp"))
