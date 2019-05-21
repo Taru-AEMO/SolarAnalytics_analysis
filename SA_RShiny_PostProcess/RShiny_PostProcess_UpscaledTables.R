@@ -22,7 +22,7 @@ df_total <- temp.df %>%
   summarise(PreEvent_MW = sum(PreEvent_MW),
             Event_MW = sum(Event_MW)) %>% 
   mutate(Tot_Power_Loss_MW = PreEvent_MW-Event_MW) %>% 
-  mutate(Tot_ChangeInPower_perc = Tot_Power_Loss_MW/PreEvent_MW) %>% 
+  mutate(Tot_ChangeInPower_perc = Tot_Power_Loss_MW/PreEvent_MW) 
 
 temp_df_total <- df_total %>% 
   select(ts.x, Tot_Power_Loss_MW)
