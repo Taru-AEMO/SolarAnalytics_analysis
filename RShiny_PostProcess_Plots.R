@@ -17,7 +17,8 @@ rm(list=ls(pattern="temp"))
 
 
 ## plot 2 ## raw data PV output short (for the time near the event) ####
-temp.plot <- aggregate(power_kW ~ ts + response_category, pp_ud, sum)
+temp.plot <- aggregate(power_kW ~ ts + response_category, pp_ud, sum) %>% 
+  filter(ts>(t0-minutes(5)) & ts <(t0+minutes(15)))
 
 colnames(temp.plot)[2] <- "Legend"
   
@@ -41,7 +42,8 @@ rm(list=ls(pattern="temp"))
 
 ## plot 3 ## PV output short (for the time near the event) by respopnse, standard, and size #### 
 temp.plot <- aggregate(power_kW ~ ts + response_category + Grouping + Standard_Version, pp_ud, sum) %>% 
-  mutate(Legend=paste0(Standard_Version," ",Grouping))
+  mutate(Legend=paste0(Standard_Version," ",Grouping))%>% 
+  filter(ts>(t0-minutes(5)) & ts <(t0+minutes(15)))
 
 p3 <- ggplot(temp.plot, aes(ts, power_kW, colour=response_category))+
   geom_area(position="stack",aes(fill=response_category))+
@@ -60,7 +62,8 @@ rm(list=ls(pattern="temp"))
 
 
 ## plot 4 ## upscaled PV output short (for the time near the event) ####
-temp.plot <- aggregate(MW_upscaled ~ ts + response_category, upscaled_ts, sum)
+temp.plot <- aggregate(MW_upscaled ~ ts + response_category, upscaled_ts, sum)%>% 
+  filter(ts>(t0-minutes(5)) & ts <(t0+minutes(15)))
 
 colnames(temp.plot)[2] <- "Legend"
 
