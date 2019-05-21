@@ -7,9 +7,12 @@ require("installr")
 library("gtable")
 library("grid")
 library("gridExtra")
+library("qpcR")
+library("Hmisc")
 
 #Set Working Directory - have pulled this out as it will change with each data set.
-folder <- "qld_4555"
+
+folder <- "qld_combinedpostcodes"
 
 dir.create(file.path(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/",folder)))
 
@@ -17,13 +20,13 @@ dir.create(file.path(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis
 setwd(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/input/",folder))
 #Input the file name of each of the data sets
 
-Actual_Data_file <- "data_4551_2017_12_31.csv"
+Actual_Data_file <- "data_2017_12_31.csv"
 
-Site_details_file <- list.files(pattern="site_details")
+Site_details_file <- "site_details.csv"
 
-Circuit_details_file <- "circuit_details_4555_updated.csv"
+Circuit_details_file <- "circuit_details.csv"
 
-EventTime <- "2018_02_11 16:28:33"
+EventTime <- "2017_12_31 14:22:56"
 
 #Run through each Process
 #1. Read, Format and Join Data Files

@@ -14,19 +14,58 @@ if(any(names(actual_data1) == "t_stamp")){
   colnames(actual_data1)[colnames(actual_data1)=="t_stamp"] <- "tstamp"
 } else if(any(names(actual_data1) == "utc_tstamp")){
   colnames(actual_data1)[colnames(actual_data1)=="utc_tstamp"] <- "tstamp"
+} else if(any(names(actual_data1) == "ts")){
+  colnames(actual_data1)[colnames(actual_data1)=="ts"] <- "tstamp"
 } else ("Cannot find time stamp column name in csv")
+
+
+if(any(names(actual_data1) == "duration")){
+  colnames(actual_data1)[colnames(actual_data1)=="duration"] <- "d"
+} else if(any(names(actual_data1) == "d")){
+  colnames(actual_data1)[colnames(actual_data1)=="d"] <- "d"
+} else ("Cannot find Duration column name in csv")
+
+
+if(any(names(actual_data1) == "energy")){
+  colnames(actual_data1)[colnames(actual_data1)=="energy"] <- "e"
+} else if(any(names(actual_data1) == "e")){
+  colnames(actual_data1)[colnames(actual_data1)=="e"] <- "e"
+} else ("Cannot find Energy column name in csv")
+
+
+if(any(names(actual_data1) == "power")){
+  colnames(actual_data1)[colnames(actual_data1)=="power"] <- "p"
+} else if(any(names(actual_data1) == "p")){
+  colnames(actual_data1)[colnames(actual_data1)=="p"] <- "p"
+} else ("Cannot find Power column name in csv")
+
+
+if(any(names(actual_data1) == "voltage")){
+  colnames(actual_data1)[colnames(actual_data1)=="voltage"] <- "v"
+} else if(any(names(actual_data1) == "v")){
+  colnames(actual_data1)[colnames(actual_data1)=="v"] <- "v"
+} else ("Cannot find Voltage column name in csv")
+
+
+if(any(names(actual_data1) == "frequency")){
+  colnames(actual_data1)[colnames(actual_data1)=="frequency"] <- "f"
+} else if(any(names(actual_data1) == "f")){
+  colnames(actual_data1)[colnames(actual_data1)=="f"] <- "f"
+} else ("Cannot find Frequency column name in csv")
 
 actual_data1 <- actual_data1%>%
   mutate(ts = ymd_hms(tstamp))%>%
   mutate(ts = with_tz(ts,"Australia/Brisbane")) %>% 
   na.omit(ts) %>% 
   mutate(c_id = as.integer(c_id),
-         energy = as.numeric(energy),
-         power=as.numeric(power),
-         voltage= as.numeric(voltage),
-         frequency = as.numeric(frequency))
+         energy = as.numeric(e),
+         power=as.numeric(p),
+         voltage= as.numeric(v),
+         frequency = as.numeric(f))
   
-         
+actual_data1 <- actual_data1 %>% 
+  mutate(c_id = as.integer(c_id))
+    
 
 site_details <-  read.csv(Site_details_file, header=TRUE, stringsAsFactors = FALSE) %>% 
   mutate(site_id=as.numeric(site_id))
@@ -38,6 +77,21 @@ circuit_details <- read.csv(Circuit_details_file, header=TRUE, stringsAsFactors 
 actual_data_join <- left_join(actual_data1, circuit_details, by="c_id") %>% 
   mutate(energy_polarity= energy*polarity,
          power_polarity = power*polarity)
+
+
+if(any(names(site_details) == "manufacturer")){
+  colnames(site_details)[colnames(site_details)=="manufacturer"] <- "inverter_manufacturer"
+} else if(any(names(site_details) == "inverter_manufacturer")){
+  colnames(site_details)[colnames(site_details)=="ts"] <- "inverter_manufacturer"
+} else ("Cannot find Manufacturer column name in csv")
+
+
+if(any(names(site_details) == "model")){
+  colnames(site_details)[colnames(site_details)=="model"] <- "inverter_model"
+} else if(any(names(site_details) == "inverter_model")){
+  colnames(site_details)[colnames(site_details)=="inverter_model"] <- "inverter_model"
+} else ("Cannot find Model column name in csv")
+
 
 
 inverter_details_unique <- site_details[,c('site_id', 'inverter_manufacturer', 'inverter_model')] %>% 
@@ -95,7 +149,7 @@ load_data_set <- filter(full_data_set, con_type %in% load.list)
 
 write.csv(load_data_set, paste0(file.name, "_LoadData.csv"))
 
-pv.list <- c("pv_site_net", "pv_site")
+pv.list <- c("pv_site_net", "pv_site","pv_inverter_net")
 pv.list.df <- as.data.frame(pv.list) 
 colnames(pv.list.df) <- "con_type"
 pv.list.df <- mutate(pv.list.df, con_type = as.character(con_type))
