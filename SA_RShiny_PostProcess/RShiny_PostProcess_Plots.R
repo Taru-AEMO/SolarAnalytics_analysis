@@ -43,12 +43,19 @@ rm(list=ls(pattern="temp"))
 ## plot 3 ## PV output short (for the time near the event) by respopnse, standard, and size #### 
 temp.plot <- aggregate(power_kW ~ ts + response_category + Grouping + Standard_Version, pp_ud, sum) %>% 
   mutate(Legend=paste0(Standard_Version," ",Grouping))%>% 
-  filter(ts>(t0-minutes(5)) & ts <(t0+minutes(15)))
+  filter(ts>(t0-minutes(5)) & ts <(t0+minutes(15))) %>% 
+  mutate(LgdOrder =ifelse(Legend =="AS4777.3:2005 <30 kW", 1, ifelse(Legend=="Transition <30 kW", 2, ifelse(Legend=="AS4777.2:2015 <30 kW", 3, 4)))) %>% 
+  mutate(ResponseOrder = ifelse(response_category =="Curtail", 2, ifelse(response_category=="Ride-Through", 1, ifelse(response_category=="Disconnect", 3, 4))))
+
+temp.plot$response_category <- factor(temp.plot$response_category, levels = unique(temp.plot$response_category[order(-temp.plot$ResponseOrder)]))
+temp.plot$Legend <- factor(temp.plot$Legend, levels = unique(temp.plot$Legend[order(temp.plot$LgdOrder)]))
+
 
 p3 <- ggplot(temp.plot, aes(ts, power_kW, colour=response_category))+
   geom_area(position="stack",aes(fill=response_category))+
   facet_wrap(~Legend)+
   geom_vline(aes(xintercept=t0),size=0.9,linetype="dashed", colour="black")+
+  sapply(tx,function(tx)geom_vline(aes(xintercept=tx),size=0.9,colour="red",linetype="dashed"))+
   theme(legend.position="bottom")+
   xlab("Time")+
   ylab("Power (kW)")
