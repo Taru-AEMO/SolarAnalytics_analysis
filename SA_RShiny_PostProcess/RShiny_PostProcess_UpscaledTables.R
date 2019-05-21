@@ -4,16 +4,6 @@
 
 ##### 1. create tables ####
 
-upscaled_ts
-
-
-DeltaP_up 
-DeltaP_perc_up
-DeltaP_perc_AS47772015
-DeltaP_perc_AS47772005
-
-
-
 power_preevent <- upscaled_ts %>% 
   filter(ts==t0) 
 names(power_preevent)[names(power_preevent)=="MW_upscaled"] <- "PreEvent_MW"
@@ -33,16 +23,18 @@ df_total <- temp.df %>%
             Event_MW = sum(Event_MW)) %>% 
   mutate(Tot_Power_Loss_MW = PreEvent_MW-Event_MW) %>% 
   mutate(Tot_ChangeInPower_perc = Tot_Power_Loss_MW/PreEvent_MW) %>% 
-  select(ts.x, Tot_Power_Loss_MW, Tot_ChangeInPower_perc)
+
+temp_df_total <- df_total %>% 
+  select(ts.x, Tot_Power_Loss_MW)
   
 
 #Evaluate Power loss by Tanch and response category
 df_tranch_response <- temp.df %>%   
   mutate(Power_Loss_MW = PreEvent_MW-Event_MW) %>% 
   mutate(ChangeInPower_perc = Power_Loss_MW/PreEvent_MW) %>% 
-  left_join(.,df_total, by="ts.x") %>% 
+  left_join(.,temp_df_total, by="ts.x") %>% 
   mutate(Proportion_DeltaP_perc = Power_Loss_MW/Tot_Power_Loss_MW) %>% 
-  select(ts.x, response_category, Standard_Version, PreEvent_MW, Event_MW,Power_Loss_MW, ChangeInPower_perc, Tot_Power_Loss_MW, Tot_ChangeInPower_perc,Proportion_DeltaP_perc)
+  select(ts.x, response_category, Standard_Version, PreEvent_MW, Event_MW,Power_Loss_MW, ChangeInPower_perc, Proportion_DeltaP_perc)
 
 
 
@@ -53,9 +45,9 @@ df_response <- temp.df %>%
             Event_MW = sum(Event_MW)) %>% 
   mutate(Power_Loss_MW = PreEvent_MW-Event_MW) %>% 
   mutate(ChangeInPower_perc = Power_Loss_MW/PreEvent_MW) %>% 
-  left_join(.,df_total, by="ts.x") %>% 
+  left_join(.,temp_df_total, by="ts.x") %>% 
   mutate(Proportion_DeltaP_perc = Power_Loss_MW/Tot_Power_Loss_MW) %>% 
-  select(ts.x, response_category, PreEvent_MW, Event_MW,Power_Loss_MW, ChangeInPower_perc,Tot_Power_Loss_MW, Tot_ChangeInPower_perc,Proportion_DeltaP_perc)
+  select(ts.x, response_category, PreEvent_MW, Event_MW,Power_Loss_MW, ChangeInPower_perc,Proportion_DeltaP_perc)
 
 
 
@@ -68,9 +60,35 @@ df_tranch <- temp.df %>%
             Event_MW = sum(Event_MW)) %>% 
   mutate(Power_Loss_MW = PreEvent_MW-Event_MW) %>% 
   mutate(ChangeInPower_perc = Power_Loss_MW/PreEvent_MW) %>% 
-  left_join(.,df_total, by="ts.x") %>% 
+  left_join(.,temp_df_total, by="ts.x") %>% 
   mutate(Proportion_DeltaP_perc = Power_Loss_MW/Tot_Power_Loss_MW) %>% 
-  select(ts.x, Standard_Version, PreEvent_MW, Event_MW,Power_Loss_MW, ChangeInPower_perc,Tot_Power_Loss_MW, Tot_ChangeInPower_perc,Proportion_DeltaP_perc)
+  select(ts.x, Standard_Version, PreEvent_MW, Event_MW,Power_Loss_MW, ChangeInPower_perc,Proportion_DeltaP_perc)
+
+
+sink("Power_Loss_Upscale.csv")
+cat("Total Power Loss")
+cat('\n')
+write.csv(df_total)
+cat('____________________________')
+cat('\n')
+cat('\n')
+cat("Power Loss By Tranch")
+cat('\n')
+write.csv(df_tranch)
+cat('____________________________')
+cat('\n')
+cat('\n')
+cat("Power Loss By Response")
+cat('\n')
+write.csv(df_response)
+cat('____________________________')
+cat('\n')
+cat('\n')
+cat("Power Loss By Tranch and Response")
+cat('\n')
+write.csv(df_tranch_response)
+cat('____________________________')
+sink()
 
 
 
