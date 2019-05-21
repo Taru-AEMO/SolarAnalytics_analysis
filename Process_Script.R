@@ -1,12 +1,7 @@
 ####PROCESS_SCRIPT.R
-
 setwd("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/ToAnalyse/")
-
-
 input.file.name <- list.files(pattern="_cleaned.csv")
 
-
-#Define Category thresholds 
 Cat1_PL_perc <- 0.04
 #Categories 2-6: Curtailment
 Cat2_PL_perc <- 0.1
@@ -14,6 +9,7 @@ Cat3_PL_perc <- 0.25
 Cat4_PL_perc <- 0.5
 Cat5_PL_perc <- 0.75
 Cat6_PL_perc <- 0.1
+
 #As a value in kW
 #Category 7: Disconnect
 Cat7_Disconnect_kW=0.05
@@ -21,18 +17,74 @@ Cat8_Disconnect_kW=0
 
 
 Final_output <- NULL
+# 
+# postcode.data <- NULL
+# 
+# for (i in input.file.name){
+#   setwd("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/ToAnalyse/")
+# 
+#   Final_clean <- read.csv(i, header=TRUE, stringsAsFactors = FALSE)
+# 
+#   temp.postcode.data <- as.data.frame(unique(Final_clean$s_postcode))
+# 
+#   colnames(temp.postcode.data) <- paste(i)
+# 
+#   postcode.data <- qpcR:::cbind.na(postcode.data, temp.postcode.data)
+# 
+# 
+# }
+# write.csv(postcode.data, "postcode.csv")
+
+
+# capacity.data <- NULL
+# 
+# for (i in input.file.name){
+#   setwd("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/ToAnalyse/")
+#   
+#   Final_clean <- read.csv(i, header=TRUE, stringsAsFactors = FALSE) %>% 
+#     mutate(ts = ymd_hms(ts, tz="Australia/Brisbane")) %>% 
+#     mutate(AC.Rating.kW. = ifelse(AC.Rating.kW.>1000, AC.Rating.kW./1000, AC.Rating.kW.))
+#   
+#   EventTime <- ymd_hms(paste0(substr(i, 6, 15)," ",substr(i, 17, 18),":",substr(i, 19, 20),":",substr(i, 21, 22)), tz="Australia/Brisbane")
+#   
+#   temp.capacity.data <- filter(Final_clean, ts>=(EventTime - seconds(14)) & ts<= (EventTime + seconds(14)))
+#   
+#   print(EventTime)
+#   print(max(temp.capacity.data$AC.Rating.kW.))
+#   print(min(temp.capacity.data$AC.Rating.kW.))
+#   
+#   print(max(temp.capacity.data$DC.Rating.kW./1000))
+#   print(min(temp.capacity.data$DC.Rating.kW./1000))
+#   
+#   temp.capacity.data1 <- temp.capacity.data %>% 
+#     group_by(ts) %>% 
+#     summarise(DC_IC_kW = sum(DC.Rating.kW.)/1000,
+#               AC_IC_kW = sum(AC.Rating.kW.))
+#   
+#   capacity.data <- rbind(capacity.data,  temp.capacity.data1)
+# 
+# }
+# write.csv(capacity.data, "IC_Capacity.csv")
+
+
 
 for (i in input.file.name){
   setwd("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/ToAnalyse/")
 dir.create(file.path(paste0("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/ToAnalyse/",substr(i,1,22))))
 
 EventTime <- ymd_hms(paste0(substr(i, 6, 15)," ",substr(i, 17, 18),":",substr(i, 19, 20),":",substr(i, 21, 22)), tz="Australia/Brisbane")
-                    
+
+  EventTime <- ymd_hms(EventTime, tz="Australia/Brisbane")                    
 print(EventTime)
 
 
 Final_clean <- read.csv(i, header=TRUE, stringsAsFactors = FALSE) %>%
   mutate(ts = ymd_hms(ts, tz="Australia/Brisbane"))
+
+
+colnames(Final_clean)[colnames(Final_clean)=="pv_installation_year_month"] <- "pv_install_date"
+colnames(Final_clean)[colnames(Final_clean)=="dc"] <- "DC.Rating.kW."
+colnames(Final_clean)[colnames(Final_clean)=="d"] <- "durn"
 
 ## test edit 20190502
 if(any(names(Final_clean) == "ac")){
@@ -53,6 +105,8 @@ Final_clean <- Final_clean %>%
   # subset(select = -duration) %>% 
   # na.omit()
 
+# Final_clean <- filter(Final_clean, durn==60)
+
 #README: This script is designed to Process a Cleaned Data Set to Evaluate the Number of Disconnections.
 
 #Filter for Power value at T_0
@@ -61,7 +115,7 @@ t_0 <- EventTime
 t_end_estimate_nadir <- EventTime + minutes(4)
 t_end_nadir <- EventTime + minutes(2)
 
-temp.power_t0 <- filter(Final_clean, ts>=(t_0 - seconds(14)) & ts<= (t_0 + seconds(14))) %>%
+temp.power_t0 <- filter(Final_clean, ts>=(t_0 - seconds(15)) & ts<= (t_0 + seconds(15))) %>%
   .[,c("c_id", "ts","power_kW")]
 
 ##Print confirmation
@@ -92,12 +146,12 @@ temp.nadir_t0 <- temp.nadir.df%>%
 colnames(temp.nadir_t0)[colnames(temp.nadir_t0)=="ts"] <- "t_nadir"
 
 #Filter for Power Value at T_1 and T_2
-temp.power_t1 <- filter(Final_clean, ts>=(t_0 + seconds(16)) & ts<=(t_0 + seconds(45))) %>%
+temp.power_t1 <- filter(Final_clean, ts>=(t_0 + seconds(45)) & ts<=(t_0 + seconds(75))) %>%
   .[,c("c_id","ts","power_kW")]
 colnames(temp.power_t1)[colnames(temp.power_t1)=="power_kW"] <- "p_0plus1"
 colnames(temp.power_t1)[colnames(temp.power_t1)=="ts"] <- "t_0plus1"
 
-temp.power_t2 <- filter(Final_clean, ts>=(t_0 + seconds(46)) & ts<=(t_0 + seconds(75))) %>%
+temp.power_t2 <- filter(Final_clean, ts>=(t_0 + seconds(76)) & ts<=(t_0 + seconds(135))) %>%
   .[,c("c_id","ts","power_kW")]
 colnames(temp.power_t2)[colnames(temp.power_t2)=="power_kW"] <- "p_0plus2"
 colnames(temp.power_t2)[colnames(temp.power_t2)=="ts"] <- "t_0plus2"
@@ -126,19 +180,25 @@ temp.ramp.diff <- temp.ramp_diff %>%
   mutate(perc_drop_to_p1 = ifelse(is.na(perc_drop_to_p1), 0, perc_drop_to_p1)) %>% 
   mutate(perc_drop_to_p2 = ifelse(is.na(perc_drop_to_p2), 0, perc_drop_to_p2)) 
 
+
+
 temp.category <- temp.ramp.diff %>%
-  mutate(Category = ifelse(p_nadir<=Cat7_Disconnect_kW & p_0>Cat7_Disconnect_kW,"Category 7 - Disconnect",
-                           ifelse(pmax(abs(perc_drop_to_p1),abs(perc_drop_to_p2))<=Cat1_PL_perc, "Category 1 - Ride Through",
-                                  ifelse((abs(p_0plus1)<abs(p_0plus2))&abs(perc_drop_to_p1)<=Cat1_PL_perc, "Category 2 - Dip",
-                                         ifelse(abs(perc_drop_nadir)<=Cat3_PL_perc, "Category 3 - Mild Curtailment",
-                                                ifelse(abs(perc_drop_nadir)<=Cat4_PL_perc, "Category 4 - Medium Curtailment",
-                                                       ifelse(abs(perc_drop_nadir)<=Cat5_PL_perc, "Category 5 - Significant Curtailment",
-                                                              ifelse(abs(perc_drop_nadir)>Cat5_PL_perc, "Category 6 - Severe Curtailment",
-                                                                     "Not categorised")))))))) %>% 
+  mutate(Category = ifelse(p_nadir<=Cat7_Disconnect_kW & p_0>Cat7_Disconnect_kW & p_0>p_nadir,"Category 7 - Disconnect",
+                           ifelse((pmax(abs(perc_drop_to_p1),abs(perc_drop_to_p2))<=Cat1_PL_perc), "Category 1 - Ride Through",
+                                  ifelse(((perc_drop_to_p1>0) & (perc_drop_to_p2>0)), "Category 1 - Ride Through",
+                                    ifelse((abs(p_0plus1)<abs(p_0plus2))&abs(perc_drop_to_p1)<=Cat2_PL_perc, "Category 2 - Dip",
+                                         ifelse(perc_drop_nadir<=-1*Cat3_PL_perc, "Category 3 - Mild Curtailment",
+                                                ifelse(perc_drop_nadir<=-1*Cat4_PL_perc, "Category 4 - Medium Curtailment",
+                                                       ifelse(perc_drop_nadir<=-1*Cat5_PL_perc, "Category 5 - Significant Curtailment",
+                                                              ifelse(perc_drop_nadir<-1*Cat5_PL_perc, "Category 6 - Severe Curtailment",
+                                                                     "Not categorised"))))))))) %>% 
   mutate(Category_basic = ifelse(Category=="Category 7 - Disconnect", "Category 7 - Disconnect",
                                  ifelse(Category=="Category 1 - Ride Through", "Category 1 - Ride Through",
                                         "Category 2-6 - Curtailment")))
 
+if(length(unique(filter(temp.category, Category=="Not categorised"))$c_id)>1){
+print("systems that have not been categorised",(unique(filter(temp.category, Category=="Not categorised"))$c_id))
+} else ("All systems categorised")
   
 ####OUTPUTS######
 # ## rachel's output for use in the voltage script:
@@ -196,9 +256,9 @@ print(temp.category.table2)
 
 ####Print Charts for all Categories
 
-draft_output <- left_join(Final_clean, temp.category, by="c_id")
+draft_output <- inner_join(Final_clean, temp.category, by="c_id")
 
-temp.output <- left_join(temp.power_t0, draft_output, by = c("c_id","t0"="ts"))
+temp.output <- inner_join(temp.power_t0, draft_output, by = c("c_id","t0"="ts"))
 
 
 ###Category 1-7 
@@ -222,7 +282,7 @@ for (ii in temp.list){
       
       temp.filtered.sites <- left_join(temp.chart, temp.curtail.values, by = "c_id")
       
-      ggplot(filter(temp.filtered.sites, ts>= (EventTime-minutes(2)) & ts<=(EventTime+minutes(5))), aes(ts, power_kW))+ 
+      ggplot(filter(temp.filtered.sites, ts>= (EventTime-minutes(10)) & ts<=(EventTime+minutes(30))), aes(ts, power_kW))+ 
         geom_line()+
         facet_wrap(~c_id, scales = "free_y")+
         geom_vline(xintercept = EventTime, linetype="dashed")+
@@ -233,7 +293,7 @@ for (ii in temp.list){
     
   }else if(length(unique(temp.curtail.values$c_id))>0 & length(unique(temp.curtail.values$c_id))<=25){
     
-      ggplot(filter(temp.curtail.values, ts>= (EventTime-minutes(2)) & ts<=(EventTime+minutes(5))), aes(ts, power_kW))+ 
+      ggplot(filter(temp.curtail.values, ts>= (EventTime-minutes(10)) & ts<=(EventTime+minutes(30))), aes(ts, power_kW))+ 
       geom_line()+
       facet_wrap(~c_id, scales = "free_y")+
       geom_vline(xintercept = EventTime, linetype="dashed")+
@@ -283,6 +343,82 @@ for (idisconnect in temp.disconnect.values){
     ggsave(paste0("_",substr(i, 6,22),"_",idisconnect,".jpeg"), plot=g, device="jpeg")
   
 }
+
+
+####Aggregated Plots
+# file.name <- paste(substr(i,1,22))
+
+temp.nadir.cat <- draft_output%>%
+  group_by(Category,c_id) %>% 
+  summarise(count =n())%>%
+  group_by(Category) %>% 
+  summarise(count = n())%>%
+  mutate(Legend=paste0(Category," (n=",count,")"))
+
+temp.nadir.df.cat <- left_join(draft_output,temp.nadir.cat,by="Category")
+
+temp.nadir.agg <- aggregate(power_kW ~ ts + Legend, temp.nadir.df.cat, mean)
+
+temp.nadir.agg <- filter(temp.nadir.agg, ts>=(EventTime-minutes(2)) & ts<=(EventTime+minutes(3)))
+
+ggplot(temp.nadir.agg,aes(x=ts,y=power_kW,colour=Legend))+
+  geom_line(size=1)+
+  labs(title = paste("mean power (kW) for the time of event by category"))+
+  geom_vline(aes(xintercept=EventTime),colour="red",linetype="dashed")
+
+ggsave(paste0("_",substr(i, 6,22),"_Power_time_of_event_by_category.jpeg"), plot=last_plot(), device="jpeg")
+
+# #### basic category
+# draft.ouput <- Categorised
+
+temp.nadir.cat <- draft_output%>%
+  group_by(Category_basic,c_id) %>% 
+  summarise(count =n())%>%
+  group_by(Category_basic) %>% 
+  summarise(count = n())%>%
+  mutate(Legend=paste0(Category_basic," (n=",count,")"))
+
+temp.nadir.df.catb <- left_join(draft_output,temp.nadir.cat,by="Category_basic")
+
+temp.nadir.agg <- aggregate(power_kW ~ ts + Legend, temp.nadir.df.catb, mean)
+
+temp.nadir.agg <- filter(temp.nadir.agg, ts>=(EventTime-minutes(2)) & ts<=(EventTime+minutes(3)))
+
+ggplot(temp.nadir.agg,aes(x=ts,y=power_kW,colour=Legend))+
+  geom_line(size=1)+
+  labs(title = paste("mean power (kW) for the time of event by category (basic)"))+
+  # geom_hline(aes(yintercept=1.00),colour="black",linetype="dashed")+
+  geom_vline(aes(xintercept=EventTime),colour="red",linetype="dashed")
+
+ggsave(paste0("_",substr(i, 6,22),"_Power_time_of_event_by_category(basic).jpeg"), plot=last_plot(), device="jpeg")
+
+# #### standard version
+
+temp.nadir.stan <- draft_output%>%
+  group_by(Standard_Version,c_id) %>% 
+  summarise(count =n())%>%
+  group_by(Standard_Version) %>% 
+  summarise(count = n())%>%
+  mutate(Legend=paste0(Standard_Version," (n=",count,")"))
+
+temp.nadir.stan <- left_join(draft_output,temp.nadir.stan,by="Standard_Version")
+
+temp.nadir.agg <- aggregate(power_kW ~ ts + Legend, temp.nadir.stan, mean)
+
+temp.nadir.agg <- filter(temp.nadir.agg, ts>=(EventTime-minutes(2)) & ts<=(EventTime+minutes(3)))
+
+ggplot(temp.nadir.agg,aes(x=ts,y=power_kW,colour=Legend))+
+  geom_line(size=1)+
+  labs(title = paste("mean power(kW) for the time of event by standard version"))+
+  # geom_hline(aes(yintercept=1.00),colour="black",linetype="dashed")+
+  geom_vline(aes(xintercept=EventTime),colour="red",linetype="dashed")
+
+ggsave(paste0("_",substr(i, 6,22),"_Power_time_of_event_by_Standard.jpeg"), plot=last_plot(), device="jpeg")
+
+# ggsave(filename=sprintf("%s/PU_time_of_event_by_standard_version.png",file.name))
+
+###
+
 
 ####Summarising To Standard Version and Outputting######
 
