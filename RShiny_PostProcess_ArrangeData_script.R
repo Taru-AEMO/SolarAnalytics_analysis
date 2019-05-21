@@ -66,7 +66,8 @@ tx <- sapply(event_time,function(x) {
   lubridate::ymd_hms(paste(date,x),tz="Australia/Brisbane")
 },simplify = FALSE)
 
-
+## timestampe to use in file names
+savetime <- paste0(substr(pre_event_interval,1,2),substr(pre_event_interval,4,5),substr(pre_event_interval,7,8))
 
 
 #### 3. upscaling calculations ####

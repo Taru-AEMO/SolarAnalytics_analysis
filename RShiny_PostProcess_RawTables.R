@@ -2,7 +2,7 @@
 #### run "arrange data" script first
 
 
-######## 1 aggregations of time series data for all P, delta_P and %delta_P tables ####
+######## 1. aggregations of time series data for all P, delta_P and %delta_P tables ####
 
 
 ## aggregate power stats
@@ -238,10 +238,12 @@ rm(list=ls(pattern="temp"))
 setwd(paste0("",directory,"/PP_output_",event_date,""))
 
 
-write.csv(table_1,file="table1.csv")
-write.csv(table_2,file="table2.csv")
-write.csv(table_3,file="table3.csv")
-write.csv(table_4,file="table4.csv")
+write.csv(table_1,file=paste0("table1_",savetime,".csv"))
+write.csv(table_2,file=paste0("table2_",savetime,".csv"))
+write.csv(table_3,file=paste0("table3_",savetime,".csv"))
+write.csv(table_4,file=paste0("table4_",savetime,".csv"))
 
+
+rm(list=ls(pattern="table"))
 
 ##### end  ####

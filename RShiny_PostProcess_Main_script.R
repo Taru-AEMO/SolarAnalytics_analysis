@@ -10,25 +10,33 @@ library("gridExtra")
 
 
 ################ set directory for all inputs / outputs
-directory <- "~/DER_disturbance_analysis/E2"
+directory <- "~/DER_disturbance_analysis/NSW_BF_Results"
 
 #
 setwd(paste0("",directory,""))
 ################# set inputs
-## save underlying data from r shiny
-underlying_data_file <- "E1_6_short_ud.csv"
+## save short underlying data from r shiny ______ this file is used for all plots of minutes/hour near event
+# underlying_data_file <- "E1_6_short_ud.csv"
+underlying_data_file <- "E2_13_short_ud.csv"
+
+## save long underlying data from r shiny ______ this file is used for one plot and must include time series for entire day
 
 
 ## toggle upscaled data and save aggregated results from r shiny
-upscaled_aggregated_file <- "E1_6_short_upscaled_ar.csv"
+# upscaled_aggregated_file <- "E1_6_short_upscaled_ar.csv"
+upscaled_aggregated_file <- "E2_13_short_upscaled_ar.csv"
+
+
 
 ####### event data, only one t0 can be input per analysis. multiple events can be input.
 ###### don't deviate from formats
 event_date <- "20180415"
 
 ### t0 is the interval immediately prior to event
-pre_event_interval <- "07:52:25"
+# pre_event_interval <- "07:52:25"
+pre_event_interval <- "09:29:25"
 
+# event_time <- c("07:52:55","07:53:55")
 event_time <- c("07:52:55","07:53:55")
 
 

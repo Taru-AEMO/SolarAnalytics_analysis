@@ -97,15 +97,69 @@ rm(list=ls(pattern="temp"))
 
 
 
+## plot 6 ## response by zone bar graph
+## collate sample count for standard version, zone, and response of each circuit ID
+temp.sample <- unique(select(pp_ud,c_id,Standard_Version,zone,response_category)) %>% 
+  mutate(response_category=gsub("-","_",response_category),
+         count=1)
+
+temp.group <- temp.sample %>% 
+  group_by(Standard_Version,zone,response_category) %>% 
+  summarise(d=sum(count)) %>% 
+  ungroup() %>% 
+  filter(response_category=="Disconnect") %>% 
+  mutate(key=paste0(Standard_Version,"_",zone))
+
+temp.group2 <- temp.sample %>% 
+  group_by(Standard_Version,zone) %>% 
+  summarise(n=sum(count)) %>% 
+  ungroup() %>% 
+  mutate(key=paste0(Standard_Version,"_",zone))
+
+temp.join <- left_join(temp.group2,select(temp.group,key,response_category,d),by="key") %>% 
+  mutate(perc_disc=(d/n)*100) %>% 
+  select(-response_category,-d,-key)
+
+temp.join[is.na(temp.join)] <- 0
+
+temp.plot <- temp.join
+
+temp.plot$Standard_Version <- ordered(temp.plot$Standard_Version, levels=c("AS4777.3:2005", "Transition", "AS4777.2:2015"))
+temp.plot$lab <- paste0("n=",temp.plot$n)
+
+p6 <- ggplot(temp.plot, aes(zone,perc_disc,colour=Standard_Version))+
+  geom_bar(stat="identity",position="dodge",aes(fill=Standard_Version))+
+  labs(title="Percentage of PV that disconnected as a percentage of zone/standard groups",
+       subtitle="'n' indicates the sample size for each zone/standard group")+
+  ylab("Percentage of sites in sample that disconnected (%)")+
+  xlab(NULL)+
+  theme(legend.position="bottom")+
+  geom_text(aes(label=lab,colour=Standard_Version),position=position_dodge(width=1),vjust=-.5,size=3)+
+  scale_colour_manual(values=c("black","black","black"))
+
+
+## remove temps
+rm(list=ls(pattern="temp"))
+
+
+
+
 ##### 6. save outputs ####
 setwd(paste0("",directory,"/PP_output_",event_date,""))
 
-ggsave(p1,file="plot_1.png")
-ggsave(p2,file="plot_2.png")
-ggsave(p3,file="plot_3.png")
-ggsave(p4,file="plot_4.png")
-ggsave(p5,file="plot_5.png")
+# ggsave(p1,file=paste0("plot_1",savetime,".png"))
+ggsave(p2,file=paste0("plot_2_",savetime,".png"))
+ggsave(p3,file=paste0("plot_3_",savetime,".png"))
+ggsave(p4,file=paste0("plot_4_",savetime,".png"))
+ggsave(p5,file=paste0("plot_5_",savetime,".png"))
+ggsave(p6,file=paste0("plot_6_",savetime,".png"))
 
+# rm(p1)
+rm(p2)
+rm(p3)
+rm(p4)
+rm(p5)
+rm(p6)
 
 ################### end ####
 
