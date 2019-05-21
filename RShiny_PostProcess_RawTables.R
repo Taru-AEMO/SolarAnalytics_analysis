@@ -1,60 +1,8 @@
 
-## 1 read in csv and process / reformat ####
+#### run "arrange data" script first
 
 
-setwd(paste0("",directory,""))
-
-raw_ud <- read.csv(paste0(underlying_data_file))
-
-## check for duplicate rows ##
-temp.distinct <- dplyr::distinct(raw_ud)
-
-print(paste0("Underlying data has ",nrow(raw_ud)," rows, and ",nrow(temp.distinct)," rows after duplicates removed."))
-print("please check and investigate if these numbers don't match. Analysis continued on filtered data set.")
-
-
-## post processing response categories ## 
-
-pp_ud <- temp.distinct %>% 
-  dplyr::filter(!response_category %in% c("5 Off at t0", "NA", "Undefined", "6 Not enough data")) %>% 
-  dplyr::mutate(response_category=gsub("3 Drop to Zero", "4 Disconnect",response_category),
-                response_category=paste(substr(response_category,3,length(response_category))),
-                ts=ymd_hms(ts,tz="Australia/Brisbane"),
-                response_category=gsub(" ","-",response_category))
-
-print("Merged drop to zero with disconnect category, response categories now read: ")
-print(unique(pp_ud$response_category))
-
-rm(raw_ud)
-rm(list=ls(pattern="temp"))
-
-
-
-
-
-## 3 create time stamps that will be searched (pre event interval and event time/s) ####
-
-
-
-t0 <- lubridate::ymd_hms(paste0(substr(event_date,1,4),"-",substr(event_date,5,6),"-",
-                                substr(event_date,7,8)," ",pre_event_interval),
-                         tz="Australia/Brisbane")
-
-date <- lubridate::ymd(paste0(substr(event_date,1,4),"-",substr(event_date,5,6),"-",substr(event_date,7,8)))
-
-tx <- sapply(event_time,function(x) {
-  lubridate::ymd_hms(paste(date,x),tz="Australia/Brisbane")
-},simplify = FALSE)
-
-# print("looking for these times:")
-# print(paste0("t0:   ",t0))
-# print(tx)
-
-
-
-
-
-######## 4 aggregations of time series data for all P, delta_P and %delta_P tables ####
+######## 1 aggregations of time series data for all P, delta_P and %delta_P tables ####
 
 
 ## aggregate power stats
@@ -108,7 +56,7 @@ temp.aggregate <- aggregate(power_kW ~ ts + Standard_Version, pp_ud, sum)
 temp.standard <- temp.aggregate %>% 
   dplyr::filter(ts %in% c(t0 , tx))
 
-##apply mutates once for each standard category
+## apply mutates once for each standard category
 list_standards <- unique(temp.standard$Standard_Version)
 
 temp.filter <- sapply(list_standards,function(x) {
@@ -140,7 +88,7 @@ temp.standard.response <- temp.aggregate %>%
   dplyr::filter(ts %in% c(t0 , tx)) %>% 
   dplyr::mutate(key=paste0(response_category,"_",Standard_Version))
 
-##apply mutates once for each standard category + response category
+## apply mutates once for each standard category + response category
 list_responseby_stand <- unique(temp.standard.response$key)
 
 temp.filter <- sapply(list_responseby_stand,function(x) {
@@ -167,7 +115,7 @@ rm(list=ls(pattern="temp"))
 
 
 
-####### 5 delta_list -> construct tables ####
+####### 2 delta_list -> construct tables ####
 
 
 ##### table 1.   change in monitored PV power (delta_P) from t0 by standard ####
@@ -286,7 +234,7 @@ rm(list=ls(pattern="temp"))
 
 
 
-##### 6 save outputs ####
+##### 3 save outputs ####
 setwd(paste0("",directory,"/PP_output_",event_date,""))
 
 

@@ -1,4 +1,3 @@
-installed.packages("xlsx")
 require("dplyr")
 require("tidyr")
 require("lubridate")
@@ -36,22 +35,25 @@ event_time <- c("07:52:55","07:53:55")
 
 ######
 dir.create(file.path(paste0("",directory,"/PP_output_",event_date,"")))
-############# monitored data analysis - tables
 
+
+############# 1. run this before any other ######################  <-- run this first
+setwd("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis")
+source("RShiny_PostProcess_ArrangeData_.R")
+
+
+######### these 3 are standard alone, independent of each other
+############# monitored data analysis - tables
 setwd("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis")
 source("RShiny_PostProcess_RawTables.R")
 
 ############# upscaled data analysis - tables
-
 setwd("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis")
 source("RShiny_PostProcess_UpscaledTables.R")
 
 ############# data analysis - plots
-#######
-
 setwd("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis")
 source("RShiny_PostProcess_Plots.R")
-
 
 #######################################################################
 
