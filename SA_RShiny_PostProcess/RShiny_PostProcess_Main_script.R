@@ -39,7 +39,7 @@ upscaled_aggregated_file <- "E2_13_short_upscaled_ar.csv"
 
 ####### event data, only one t0 can be input per analysis. multiple events can be input.
 ###### don't deviate from formats
-event_date <- "20171209"
+event_date <- "20180415"
 
 ### t0 is the interval immediately prior to event <-- must match exact time stamp in data
 # pre_event_interval <- "07:52:25"
