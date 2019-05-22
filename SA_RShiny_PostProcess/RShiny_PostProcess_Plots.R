@@ -44,7 +44,7 @@ rm(list=ls(pattern="temp"))
 temp.plot <- aggregate(power_kW ~ ts + response_category + Grouping + Standard_Version, pp_ud, sum) %>% 
   mutate(Legend=paste0(Standard_Version," ",Grouping))%>% 
   filter(ts>(t0-minutes(5)) & ts <(t0+minutes(15))) %>% 
-  mutate(LgdOrder =ifelse(Legend =="AS4777.3:2005 <30 kW", 1, ifelse(Legend=="Transition <30 kW", 2, ifelse(Legend=="AS4777.2:2015 <30 kW", 3, 4)))) %>% 
+  mutate(LgdOrder =ifelse(Legend =="AS4777.3:2005 <30 kW", 1, ifelse(Legend=="Transition <30 kW", 2, ifelse(Legend=="AS4777.2:2015 <30 kW", 3, ifelse(Legend=="AS4777.3:2005 30-100kW", 4, ifelse(Legend=="Transition 30-100kW", 5, ifelse(Legend=="AS4777.2:2015 30-100kW",6,7))))))) %>% 
   mutate(ResponseOrder = ifelse(response_category =="Curtail", 2, ifelse(response_category=="Ride-Through", 1, ifelse(response_category=="Disconnect", 3, 4))))
 
 temp.plot$response_category <- factor(temp.plot$response_category, levels = unique(temp.plot$response_category[order(-temp.plot$ResponseOrder)]))
