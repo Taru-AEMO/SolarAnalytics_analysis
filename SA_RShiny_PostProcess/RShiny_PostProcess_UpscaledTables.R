@@ -39,7 +39,7 @@ df_tranch_response <- temp.df %>%
 
 
 #Evaluate Power loss by response category
-df_response <- temp.df %>% 
+pp_response <- temp.df %>% 
   group_by(ts.x, response_category) %>% 
   summarise(PreEvent_MW = sum(PreEvent_MW),
             Event_MW = sum(Event_MW)) %>% 
@@ -80,7 +80,7 @@ cat('\n')
 cat('\n')
 cat("Power Loss By Response")
 cat('\n')
-write.csv(df_response)
+write.csv(pp_response)
 cat('____________________________')
 cat('\n')
 cat('\n')
