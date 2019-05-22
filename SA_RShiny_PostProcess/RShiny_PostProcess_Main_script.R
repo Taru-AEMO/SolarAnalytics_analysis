@@ -25,7 +25,6 @@ underlying_data_file <- "E2_13_short_ud.csv"
 # underlying_data_file <- "T2_2_short_ud.csv"
 
 
-
 ## save long underlying data from r shiny ______ this file is used for one plot and must include time series for entire day
 # day_timeseries_file <- ""
 
@@ -37,9 +36,10 @@ upscaled_aggregated_file <- "E2_13_short_upscaled_ar.csv"
 # upscaled_aggregated_file <- NULL
 
 
+
 ####### event data, only one t0 can be input per analysis. multiple events can be input.
 ###### don't deviate from formats
-event_date <- "20180415"
+event_date <- "20171209"
 
 ### t0 is the interval immediately prior to event <-- must match exact time stamp in data
 # pre_event_interval <- "07:52:25"
@@ -65,6 +65,7 @@ event_time <- c("09:31:25","09:33:55","09:34:25","09:36:55","09:37:55","09:38:25
 # event_time <- c("09:33:25","09:33:55")
 # event_time <- c("09:36:25")
 # event_time <- c("09:37:25")
+
 
 
 ######

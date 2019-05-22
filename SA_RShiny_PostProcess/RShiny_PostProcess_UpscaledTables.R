@@ -10,7 +10,8 @@ names(power_preevent)[names(power_preevent)=="MW_upscaled"] <- "PreEvent_MW"
 
 #Find Minimum Power following the event
 power_event <- upscaled_ts %>% 
-  filter(ts%in%tx)
+  filter(ts==tx)
+
 names(power_event)[names(power_event)=="MW_upscaled"] <- "Event_MW"
 
 
@@ -22,7 +23,8 @@ df_total <- temp.df %>%
   summarise(PreEvent_MW = sum(PreEvent_MW),
             Event_MW = sum(Event_MW)) %>% 
   mutate(Tot_Power_Loss_MW = PreEvent_MW-Event_MW) %>% 
-  mutate(Tot_ChangeInPower_perc = Tot_Power_Loss_MW/PreEvent_MW)
+  mutate(Tot_ChangeInPower_perc = Tot_Power_Loss_MW/PreEvent_MW) 
+
 
 temp_df_total <- df_total %>% 
   select(ts.x, Tot_Power_Loss_MW)
@@ -39,7 +41,7 @@ df_tranch_response <- temp.df %>%
 
 
 #Evaluate Power loss by response category
-df_response <- temp.df %>% 
+pp_response <- temp.df %>% 
   group_by(ts.x, response_category) %>% 
   summarise(PreEvent_MW = sum(PreEvent_MW),
             Event_MW = sum(Event_MW)) %>% 
@@ -69,6 +71,7 @@ df_tranch <- temp.df %>%
 ##### save outputs ####
 setwd(paste0("",directory,"/PP_output_",event_date,""))
 
+
 sink("Power_Loss_Upscale.csv")
 cat("Total Power Loss")
 cat('\n')
@@ -84,7 +87,7 @@ cat('\n')
 cat('\n')
 cat("Power Loss By Response")
 cat('\n')
-write.csv(df_response)
+write.csv(pp_response)
 cat('____________________________')
 cat('\n')
 cat('\n')
