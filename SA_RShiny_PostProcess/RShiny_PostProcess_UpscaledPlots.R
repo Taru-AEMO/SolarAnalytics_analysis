@@ -42,9 +42,18 @@ p2 <- ggplot(temp.plot2, aes(ts, MW_upscaled, colour=response_category))+
   ylab("Power (MW)")
 
 
-rm(list=ls(pattern="temp"))
+temp.response <- select(pp_response, ts.y, response_category, Power_Loss_MW) 
+temp.total <- df_total %>% 
+  #mutate(response_category = as.factor("Total")) %>% 
+  #plyr::rename(.,c("Tot_Power_Loss_MW" = "Power_Loss_MW")) %>% 
+  select(ts.y, Tot_Power_Loss_MW)
 
-
+temp.plot3 <- left_join(temp.response, temp.total, by="ts.y")
+#temp.plot3 <- rbind(as.data.frame(temp.response), as.data.frame(temp.total))
+  
+p3 <- ggplot(temp.plot3, aes(x=ts.y))+
+  geom_bar(aes(y=Power_Loss_MW, fill = response_category),stat= "identity")+
+  geom_point(aes(y=Tot_Power_Loss_MW))
 
 
 ##### 6. save outputs ####
@@ -52,7 +61,7 @@ setwd(paste0("",directory,"/PP_output_",event_date,""))
 
 ggsave(p1,file=paste0("plot_1_upscale_",savetime,".png"))
 ggsave(p2,file=paste0("plot_2_upscale_",savetime,".png"))
-# ggsave(p3,file=paste0("plot_3_",savetime,".png"))
+ggsave(p3,file=paste0("plot_3_upscale_",savetime,".png"))
 # ggsave(p4,file=paste0("plot_4_",savetime,".png"))
 # ggsave(p5,file=paste0("plot_5_",savetime,".png"))
 # ggsave(p6,file=paste0("plot_6_",savetime,".png"))
@@ -64,3 +73,5 @@ rm(p2)
 # rm(p5)
 # rm(p6)
 ###
+
+rm(list=ls(pattern="temp"))
