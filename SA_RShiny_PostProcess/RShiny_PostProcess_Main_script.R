@@ -19,7 +19,7 @@ setwd(paste0("",directory,""))
 # underlying_data_file <- "E1_6_short_ud.csv"
 #underlying_data_file <- "20180118_underlying.csv"
 # underlying_data_file <- "E3_10_short_ud.csv"
-# underlying_data_file <- "E4_5_short_ud.csv"
+underlying_data_file <- "E4_5_short_ud.csv"
 
 # underlying_data_file <- "T1_2_short_ud.csv"
 # underlying_data_file <- "T2_2_short_ud.csv"
@@ -32,7 +32,7 @@ setwd(paste0("",directory,""))
 # upscaled_aggregated_file <- "E1_6_short_upscaled_ar.csv"
 #upscaled_aggregated_file <- "20180118_upscale.csv"
 # upscaled_aggregated_file <- "E3_10_short_upscaled_ar.csv"
-# upscaled_aggregated_file <- "E4_5_short_upscaled_ar.csv"
+upscaled_aggregated_file <- "E4_5_short_upscaled_ar.csv"
 # upscaled_aggregated_file <- NULL
 
 
@@ -45,7 +45,7 @@ setwd(paste0("",directory,""))
 # pre_event_interval <- "07:52:25"
 #pre_event_interval <- "15:18:25"
 # pre_event_interval <- "09:43:55"
-# pre_event_interval <- "11:29:55"
+pre_event_interval <- "11:29:55"
 
 # pre_event_interval <- "09:29:55"
 # pre_event_interval <- "09:32:55"
@@ -59,7 +59,7 @@ setwd(paste0("",directory,""))
 # event_time <- c("07:52:55","07:53:55")
 #event_time <- c( "15:19:25")
 # event_time <- c("09:44:25","09:45:55","09:50:55")
-# event_time <- c("11:30:55")
+event_time <- c("11:30:55")
 
 # event_time <- c("09:31:25")
 # event_time <- c("09:33:25","09:33:55")
