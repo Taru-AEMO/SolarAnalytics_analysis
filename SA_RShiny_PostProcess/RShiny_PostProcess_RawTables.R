@@ -262,15 +262,28 @@ table_4 <- arrange(table_4,response_category)
 ## remove temps
 rm(list=ls(pattern="temp"))
 
-####ELOISE START HERE###
-##Start with the pp_ud Dataframe :)
 
+#### table.5: Unscaled data: sample count, cleaned data only ####
 
+#Create basis for table 5, grouping by Standard and Size
+temp.table1 <- unique_list %>%
+  group_by(Standard_Version,Grouping) %>%
+  summarise(n=n_distinct(c_id)) %>%
+  spread(Grouping,n) 
 
+#Add row totals
+temp.table1$Total = rowSums( temp.table1[ sapply(temp.table1, is.numeric)] )
+
+#Add column totals and create final table
+table_5 <- rbind( temp.table1, append(c(Standard_Version="Total"),  
+                   as.list(colSums( temp.table1[ sapply(temp.table1, is.numeric)] ))))
+
+rm(list=ls(pattern="temp"))
 
 
 ##### 3 save outputs ####
 setwd(paste0("",directory,"/PP_output_",event_date,""))
+
 
 
 sink(paste0("All_Raw_Tables_",savetime,".csv"))
@@ -302,7 +315,14 @@ cat("Response category as percentage of systems on each standard")
 cat('\n')
 write.csv(table_4)
 cat('____________________________')
+cat('\n')
+cat('\n')
+cat("Unnamed Table 5")
+cat('\n')
+write.csv(table_5)
+cat('____________________________')
 sink()
+
 
 
 
