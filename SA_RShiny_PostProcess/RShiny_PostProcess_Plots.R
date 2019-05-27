@@ -157,6 +157,11 @@ p6 <- ggplot(temp.plot, aes(zone,perc_disc,colour=Standard_Version))+
 rm(list=ls(pattern="temp"))
 
 
+####HEY ELOISE START PLOTTING THE CHARTS HERE :)
+#For the site performance factor start with pp_ar dataframe
+
+#For the cumulative disconnects, start with pp_ud dataframe
+
 
 
 ##### 6. save outputs ####
