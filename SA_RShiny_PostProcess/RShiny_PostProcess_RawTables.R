@@ -120,13 +120,28 @@ rm(list=ls(pattern="temp"))
 
 ##### table 1.   change in monitored PV power (delta_P) from t0 by standard ####
 ## manipulate / rearrange
-table_1 <- delta_list %>% 
+table_1b <- delta_list %>% 
   dplyr::filter(type=="standard") %>% 
   gather(unit,value,-legend,-type,-ts) %>%
   mutate(header=paste(legend,unit)) %>% 
   select(-type,-legend,-unit) %>%
-  spread(header,value)
-  
+  spread(header,value) %>% 
+  select(ts,
+         "AS4777.3:2005 power_kW","AS4777.3:2005 delta_kW","AS4777.3:2005 delta_perc",
+         "Transition power_kW","Transition delta_kW","Transition delta_perc",
+         "AS4777.2:2015 power_kW","AS4777.2:2015 delta_kW","AS4777.2:2015 delta_perc")
+
+
+##### table x.   change in monitored PV power (delta_P) from t0 total ####
+table_1a <- delta_list %>% 
+  dplyr::filter(type=="monitored_total") %>% 
+  gather(unit,value,-legend,-type,-ts)  %>% 
+  mutate(header=paste(legend,unit)) %>% 
+  select(-type,-legend,-unit) %>%
+  spread(header,value) %>% 
+  select(ts,"Total power_kW","Total delta_kW", "Total delta_perc")
+
+
 
 ##### table 2.   change in monitored PV power (delta_P) for each response group as a percentage of total delta_P, for each standard ####
 ## A grab delta kW for each standard
@@ -164,17 +179,23 @@ temp.join <- left_join(table_2,select(temp.bind,-ts,-legend),by="key") %>%
 ## (will require manual changes if response categories are changed)
 temp.table <- temp.join %>% 
   select(ts,legend,delta_kW,Curtail,Disconnect,Ride_Through=`Ride-Through`) %>% 
-  dplyr::mutate(perc_Curtail=(Curtail/delta_kW)*100,
-                perc_Disconnect=(Disconnect/delta_kW)*100,
-                perc_Ride_Through=(Ride_Through/delta_kW)*100)
+  dplyr::mutate(perc_Ride_Through=(Ride_Through/delta_kW)*100,
+                perc_Curtail=(Curtail/delta_kW)*100,
+                perc_Disconnect=(Disconnect/delta_kW)*100)
 
 ## filter for the ts, standard, and power columns -- then any columsn with "percentage"
 # (trying to reduce changes to the script required if we decide to use different response categories in the future)
 temp.col_collect <- as.integer(c(1,2,3,paste0(which(grepl("perc",colnames(temp.table))))))
 
+
 ## 
 table_2 <- NULL
 table_2 <- select(temp.table,temp.col_collect) 
+
+## rearrange rows
+table_2$legend <- ordered(table_2$legend, levels=c("AS4777.3:2005", "Transition", "AS4777.2:2015", "Total"))
+table_2 <- arrange(table_2,ts,legend)
+
 
 rm(list=ls(pattern="temp"))
 
@@ -188,6 +209,7 @@ temp.sample <- unique(select(pp_ud,c_id,response_category))
 print(paste0("number of unique circuit ids: ",length(temp.sites)))
 print(paste0("number of unique circuit - response matches: ",nrow(temp.sample)))
 print("Please investigate if these numbers do not match, as multiple responses have been assigned to one circuit")
+print("__________")
 
 ## if test failed, these are you're duplicated circuits
 if (length(temp.sites) != nrow(temp.sample)){
@@ -205,10 +227,14 @@ unique_list <- unique(select(pp_ud,c_id,Standard_Version,Grouping,response_categ
 table_3 <- unique_list %>% 
   group_by(Standard_Version,Grouping,response_category) %>% 
   summarise(n=sum(count)) %>% 
-  spread(response_category,n)%>% 
-  mutate(unit="count")
+  spread(Standard_Version,n) %>% 
+  select(Grouping,response_category,`AS4777.3:2005`,Transition,`AS4777.2:2015`)
 
+## rearrange rows
+table_3$response_category <- ordered(table_3$response_category, levels=c("Ride_Through", "Curtail", "Disconnect"))
+table_3 <- arrange(table_3,Grouping,response_category)
 
+## remove tmeps
 rm(list=ls(pattern="temp"))
 
 
@@ -227,8 +253,13 @@ temp.join <- left_join(temp.table,temp.table2,by="Standard_Version") %>%
   spread(Standard_Version,perc_standard)
 
 table_4 <- temp.join %>% 
-  mutate(unit="percentage")
+  select(response_category,`AS4777.3:2005`,Transition,`AS4777.2:2015`)
 
+## rearrange rows
+table_4$response_category <- ordered(table_4$response_category, levels=c("Ride_Through", "Curtail", "Disconnect"))
+table_4 <- arrange(table_4,response_category)
+
+## remove temps
 rm(list=ls(pattern="temp"))
 
 ####ELOISE START HERE###
@@ -237,14 +268,42 @@ rm(list=ls(pattern="temp"))
 
 
 
+
 ##### 3 save outputs ####
 setwd(paste0("",directory,"/PP_output_",event_date,""))
 
 
-write.csv(table_1,file=paste0("table1_",savetime,".csv"))
-write.csv(table_2,file=paste0("table2_",savetime,".csv"))
-write.csv(table_3,file=paste0("table3_",savetime,".csv"))
-write.csv(table_4,file=paste0("table4_",savetime,".csv"))
+sink(paste0("All_Raw_Tables_",savetime,".csv"))
+cat("Total Power Loss")
+cat('\n')
+write.csv(table_1a)
+cat('____________________________')
+cat('\n')
+cat('\n')
+cat("Power Loss By Standard Version")
+cat('\n')
+write.csv(table_1b)
+cat('____________________________')
+cat('\n')
+cat('\n')
+cat("Response as a percentage of Power Lost")
+cat('\n')
+write.csv(table_2)
+cat('____________________________')
+cat('\n')
+cat('\n')
+cat("Count of response categories By Tranch")
+cat('\n')
+write.csv(table_3)
+cat('____________________________')
+cat('\n')
+cat('\n')
+cat("Response category as percentage of systems on each standard")
+cat('\n')
+write.csv(table_4)
+cat('____________________________')
+sink()
+
 
 
 rm(list=ls(pattern="table"))
