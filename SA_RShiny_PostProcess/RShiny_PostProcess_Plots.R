@@ -157,6 +157,24 @@ p6 <- ggplot(temp.plot, aes(zone,perc_disc,colour=Standard_Version))+
   ylim(limits = c(0, 100))
 
 
+temp.plot7 <- temp.sample %>% 
+  group_by(zone, response_category) %>% 
+  summarise(d=sum(count)) %>% 
+  spread(response_category, d)
+temp.plot7[is.na(temp.plot7)] <- 0
+temp.plot7 <- temp.plot7 %>% 
+  mutate(Total = sum(Curtail+Disconnect+Ride_Through)) %>% 
+  mutate(perc_disc= 100*Disconnect/Total) %>% 
+  mutate(lab = paste0("n=",Total))
+
+
+p7 <- ggplot(temp.plot7, aes(zone,perc_disc))+
+  geom_bar(stat="identity",position="dodge", aes(fill="salmon1"), show.legend=FALSE)+
+  labs(title="Percentage of PV that disconnected by zone",
+       subtitle="'n' indicates the sample size for each zone")+
+  ylab("Percentage of sites in zone that disconnected (%)")+
+  xlab(NULL)+
+  geom_text(aes(label=lab),position=position_dodge(width=1),vjust=-.5,size=3)
 
 # plot(p6)
 
@@ -180,6 +198,7 @@ ggsave(p3,file=paste0("plot_3_",savetime,".png"))
 ggsave(p4,file=paste0("plot_4_",savetime,".png"))
 ggsave(p5,file=paste0("plot_5_",savetime,".png"))
 ggsave(p6,file=paste0("plot_6_",savetime,".png"))
+ggsave(p7,file=paste0("plot_7_",savetime,".png"))
 
 # rm(p1)
 rm(p2)
@@ -187,7 +206,7 @@ rm(p3)
 rm(p4)
 rm(p5)
 rm(p6)
-
+rm(p7)
 ################### end ####
 
 

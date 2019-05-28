@@ -1,6 +1,6 @@
 ###UPSCALED PLOTS
 
-##Input files from other R Scripts and Manipulated for output
+##Input files from other R Scripts and Manipulated as needed
 #Set order of the chart correct from the beginning - by changing the factor levels
 pp_upscaled_ts <- upscaled_ts %>% 
   mutate(Legend=response_category)%>% 
