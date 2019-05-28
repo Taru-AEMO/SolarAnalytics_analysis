@@ -14,16 +14,16 @@ AEMOColours <- c(
   lightGrey = "#E6E7EB",
   black = "#000000")
 
-AEMOCpp <- c( "#FFC222",
-             "#F37421",
-             "#C41230",
-             "#360F3C",
-             "#B3E0EE",
+AEMOCpp <- c( "#C41230",
+              "#360F3C",
+              "#F37421",
+             "#FFC222",
              "#82859C",
-             "#FFFFFF",
-             "#222324",
+             "#B3E0EE",
              "#E6E7EB",
-             "#000000")
+             "#222324",
+             "#FFFFFF",
+              "#000000")
 
 theme_AEMO <- function() {
   theme(panel.background = element_blank(),
