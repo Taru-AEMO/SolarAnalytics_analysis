@@ -16,6 +16,7 @@ temp.distinct <- dplyr::distinct(up_ar)
 
 print(paste0("Upscaled csv has ",nrow(up_ar)," rows, and ",nrow(temp.distinct)," rows after duplicates removed."))
 print("please check and investigate if these numbers don't match. Analysis continued on filtered data set.")
+print("_____________")
 
 ## change time format
 pp_ar <- temp.distinct %>% 
@@ -35,6 +36,7 @@ temp.distinct <- dplyr::distinct(raw_ud)
 
 print(paste0("(Raw) underlying data has ",nrow(raw_ud)," rows, and ",nrow(temp.distinct)," rows after duplicates removed."))
 print("please check and investigate if these numbers don't match. Analysis continued on filtered data set.")
+print("______________")
 
 ## fix response categories
 
@@ -47,6 +49,7 @@ pp_ud <- temp.distinct %>%
 
 print("Merged drop to zero with disconnect category, response categories now read: ")
 print(unique(pp_ud$response_category))
+print("_____________")
 
 rm(raw_ud)
 rm(list=ls(pattern="temp"))
