@@ -111,6 +111,36 @@ delta_list <- bind_rows(temp.filter,delta_list)
 ## remove temp files
 rm(list=ls(pattern="temp"))
 
+## aggregate power + standard + Grouping
+temp.aggregate <- aggregate(power_kW ~ ts + Grouping + Standard_Version, pp_ud, sum)
+
+
+temp.standard.grouping <- temp.aggregate %>% 
+  dplyr::filter(ts %in% c(t0 , tx)) %>% 
+  dplyr::mutate(key=paste0(Grouping,"_",Standard_Version))
+
+## apply mutates once for each standard category + grouping category
+list_group_stand <- unique(temp.standard.grouping$key)
+
+temp.filter <- sapply(list_group_stand,function(x) {
+  
+  temp.row <- temp.standard.grouping %>%
+    dplyr::filter(key==x)
+  
+  temp.row <- temp.row %>%
+    dplyr::mutate(delta_kW=power_kW-(temp.row$power_kW[1]),
+                  delta_perc=(delta_kW/(temp.row$power_kW[1])*100),
+                  legend=paste0(x),
+                  type="grouping_by_standard") %>%
+    select(-Standard_Version,-Grouping,-key)
+  
+},simplify = FALSE)
+
+## bind to final data frame
+delta_list <- bind_rows(temp.filter,delta_list)
+
+## remove temp files
+rm(list=ls(pattern="temp"))
 
 
 
@@ -132,7 +162,7 @@ table_1b <- delta_list %>%
          "AS4777.2:2015 power_kW","AS4777.2:2015 delta_kW","AS4777.2:2015 delta_perc")
 
 
-##### table x.   change in monitored PV power (delta_P) from t0 total ####
+##### table 1a.   change in monitored PV power (delta_P) from t0 total ####
 table_1a <- delta_list %>% 
   dplyr::filter(type=="monitored_total") %>% 
   gather(unit,value,-legend,-type,-ts)  %>% 
@@ -141,6 +171,17 @@ table_1a <- delta_list %>%
   spread(header,value) %>% 
   select(ts,"Total power_kW","Total delta_kW", "Total delta_perc")
 
+
+##### table 1c.   change in monitored PV power (delta_P) from t0 by standard for <30kW systems ####
+table_1c <- delta_list %>% 
+  dplyr::filter(type=="grouping_by_standard") %>% 
+  gather(unit,value,-legend,-type,-ts)  %>% 
+  mutate(header=paste(legend,unit)) %>% 
+  select(-type,-legend,-unit) %>%
+  spread(header,value) %>%
+  select(ts, "<30 kW_AS4777.3:2005 power_kW","<30 kW_AS4777.3:2005 delta_kW", "<30 kW_AS4777.3:2005 delta_perc",
+         "<30 kW_Transition power_kW","<30 kW_Transition delta_kW", "<30 kW_Transition delta_perc",
+         "<30 kW_AS4777.2:2015 power_kW","<30 kW_AS4777.2:2015 delta_kW", "<30 kW_AS4777.2:2015 delta_perc")
 
 
 ##### table 2.   change in monitored PV power (delta_P) for each response group as a percentage of total delta_P, for each standard ####
@@ -287,6 +328,12 @@ setwd(paste0("",directory,"/PP_output_",event_date,""))
 
 
 sink(paste0("All_Raw_Tables_",savetime,".csv"))
+cat("Post-clean number of systems in sample")
+cat('\n')
+write.csv(table_5)
+cat('____________________________')
+cat('\n')
+cat('\n')
 cat("Total Power Loss")
 cat('\n')
 write.csv(table_1a)
@@ -296,6 +343,12 @@ cat('\n')
 cat("Power Loss By Standard Version")
 cat('\n')
 write.csv(table_1b)
+cat('____________________________')
+cat('\n')
+cat('\n')
+cat("Power Loss By Standard Version, for <30kW systems")
+cat('\n')
+write.csv(table_1c)
 cat('____________________________')
 cat('\n')
 cat('\n')
@@ -314,12 +367,6 @@ cat('\n')
 cat("Response category as percentage of systems on each standard")
 cat('\n')
 write.csv(table_4)
-cat('____________________________')
-cat('\n')
-cat('\n')
-cat("Unnamed Table 5")
-cat('\n')
-write.csv(table_5)
 cat('____________________________')
 sink()
 
