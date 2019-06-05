@@ -43,6 +43,7 @@ p2 <- ggplot(temp.plot2, aes(ts, MW_upscaled))+
   geom_area(position="stack",aes(fill=Legend))+
   facet_wrap(~Standard_Version)+
   geom_vline(aes(xintercept=t0),size=0.9,linetype="dashed", colour="black")+
+  sapply(tx,function(tx)geom_vline(aes(xintercept=tx),size=0.9,colour="red",linetype="dashed"))+
   theme(legend.position="bottom")+
   xlab("Time")+
   ylab("Power (MW)")+
