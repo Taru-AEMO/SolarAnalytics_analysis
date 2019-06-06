@@ -7,8 +7,7 @@ require("installr")
 library("gtable")
 library("grid")
 library("gridExtra")
-
-
+source("AEMOtemplate_format.R")
 ################ set directory for all inputs / outputs
 directory <- "~/DER_disturbance_analysis/NSW_BF_Results"
 

@@ -41,7 +41,7 @@ df_tranch_response <- temp.df %>%
 
 
 #Evaluate Power loss by response category
-pp_response <- temp.df %>% 
+df_response <- temp.df %>% 
   group_by(ts.y, response_category) %>% 
   summarise(PreEvent_MW = sum(PreEvent_MW),
             Event_MW = sum(Event_MW)) %>% 
@@ -50,10 +50,6 @@ pp_response <- temp.df %>%
   left_join(.,temp_df_total, by="ts.y") %>% 
   mutate(Proportion_DeltaP_perc = Power_Loss_MW/Tot_Power_Loss_MW) %>% 
   select(ts.y, response_category, PreEvent_MW, Event_MW,Power_Loss_MW, ChangeInPower_perc,Proportion_DeltaP_perc)
-
-
-
-
 
 #Evaluate Power loss by response category
 df_tranch <- temp.df %>% 
@@ -66,7 +62,20 @@ df_tranch <- temp.df %>%
   mutate(Proportion_DeltaP_perc = Power_Loss_MW/Tot_Power_Loss_MW) %>% 
   select(ts.y, Standard_Version, PreEvent_MW, Event_MW,Power_Loss_MW, ChangeInPower_perc,Proportion_DeltaP_perc)
 
+#Calculate Power at t0
+df_TotPower_t0 <- power_preevent %>% 
+  group_by(ts) %>% 
+  summarise(PreEvent_MW = sum(PreEvent_MW))
 
+df_Power_t0 <- power_preevent %>% 
+  group_by(ts, Standard_Version) %>% 
+  summarise(Std_PreEvent_MW = round(sum(PreEvent_MW),2)) %>%
+  left_join(.,df_TotPower_t0, by = "ts") %>% 
+  mutate(PreEvent_perc = round((100*Std_PreEvent_MW/PreEvent_MW),2)) %>% 
+  mutate(Value = paste0(Std_PreEvent_MW, " (",PreEvent_perc,"%)")) %>% 
+  select(ts, Standard_Version, PreEvent_MW, Value)
+
+df_Power_t0 <- dcast(df_Power_t0, ts+PreEvent_MW~Standard_Version, value.var="Value")
 
 ##### save outputs ####
 setwd(paste0("",directory,"/PP_output_",event_date,""))
@@ -87,7 +96,7 @@ cat('\n')
 cat('\n')
 cat("Power Loss By Response")
 cat('\n')
-write.csv(pp_response)
+write.csv(df_response)
 cat('____________________________')
 cat('\n')
 cat('\n')
@@ -95,6 +104,11 @@ cat("Power Loss By Tranch and Response")
 cat('\n')
 write.csv(df_tranch_response)
 cat('____________________________')
+cat('\n')
+cat('\n')
+cat("Proportion at t0")
+cat('\n')
+write.csv(df_Power_t0)
 sink()
 
 

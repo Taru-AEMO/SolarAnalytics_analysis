@@ -23,14 +23,15 @@ temp.plot <- aggregate(power_kW ~ ts + response_category, pp_ud, sum) %>%
 colnames(temp.plot)[2] <- "Legend"
   
 
-p2 <- ggplot(temp.plot, aes(ts,power_kW,colour=Legend))+
+p2 <- ggplot(temp.plot, aes(ts,power_kW))+
   geom_area(position="stack",aes(fill=Legend))+
   labs(title="[Raw data] PV output by response category")+
   theme(legend.position="bottom")+
   xlab("Time")+
   ylab("Power (kW)")+
   geom_vline(aes(xintercept=t0),size=0.9,colour="black",linetype="dashed")+
-  sapply(tx,function(tx)geom_vline(aes(xintercept=tx),size=0.9,colour="red",linetype="dashed"))
+  sapply(tx,function(tx)geom_vline(aes(xintercept=tx),size=0.9,colour="red",linetype="dashed"))+
+  scale_fill_manual(values=AEMOCpp)
 
 # plot(p2)
 
@@ -42,23 +43,27 @@ rm(list=ls(pattern="temp"))
 
 ## plot 3 ## PV output short (for the time near the event) by respopnse, standard, and size #### 
 temp.plot <- aggregate(power_kW ~ ts + response_category + Grouping + Standard_Version, pp_ud, sum) %>% 
-  mutate(Legend=paste0(Standard_Version," ",Grouping))%>% 
+  mutate(Category=paste0(Standard_Version," ",Grouping))%>% 
   filter(ts>(t0-minutes(5)) & ts <(t0+minutes(15))) %>% 
-  mutate(LgdOrder =ifelse(Legend =="AS4777.3:2005 <30 kW", 1, ifelse(Legend=="Transition <30 kW", 2, ifelse(Legend=="AS4777.2:2015 <30 kW", 3, ifelse(Legend=="AS4777.3:2005 30-100kW", 4, ifelse(Legend=="Transition 30-100kW", 5, ifelse(Legend=="AS4777.2:2015 30-100kW",6,7))))))) %>% 
+  mutate(CatOrder =ifelse(Category =="AS4777.3:2005 <30 kW", 1, ifelse(Category=="Transition <30 kW", 2, ifelse(Category=="AS4777.2:2015 <30 kW", 3, ifelse(Category=="AS4777.3:2005 30-100kW", 4, ifelse(Category=="Transition 30-100kW", 5, ifelse(Category=="AS4777.2:2015 30-100kW",6,7))))))) %>% 
   mutate(ResponseOrder = ifelse(response_category =="Curtail", 2, ifelse(response_category=="Ride-Through", 1, ifelse(response_category=="Disconnect", 3, 4))))
 
 temp.plot$response_category <- factor(temp.plot$response_category, levels = unique(temp.plot$response_category[order(-temp.plot$ResponseOrder)]))
-temp.plot$Legend <- factor(temp.plot$Legend, levels = unique(temp.plot$Legend[order(temp.plot$LgdOrder)]))
+temp.plot$Category <- factor(temp.plot$Category, levels = unique(temp.plot$Category[order(temp.plot$CatOrder)]))
 
 
-p3 <- ggplot(temp.plot, aes(ts, power_kW, colour=response_category))+
-  geom_area(position="stack",aes(fill=response_category))+
-  facet_wrap(~Legend)+
+colnames(temp.plot)[2] <- "Legend"
+
+
+p3 <- ggplot(temp.plot, aes(ts, power_kW))+
+  geom_area(position="stack",aes(fill=Legend))+
+  facet_wrap(~Category)+
   geom_vline(aes(xintercept=t0),size=0.9,linetype="dashed", colour="black")+
   sapply(tx,function(tx)geom_vline(aes(xintercept=tx),size=0.9,colour="red",linetype="dashed"))+
   theme(legend.position="bottom")+
   xlab("Time")+
-  ylab("Power (kW)")
+  ylab("Power (kW)")+
+  scale_fill_manual(values=AEMOCpp)
 
 # plot(p3)
 
@@ -75,14 +80,16 @@ temp.plot <- aggregate(MW_upscaled ~ ts + response_category, upscaled_ts, sum)%>
 colnames(temp.plot)[2] <- "Legend"
 
 
-p4 <- ggplot(temp.plot, aes(ts,MW_upscaled,colour=Legend))+
+p4 <- ggplot(temp.plot, aes(ts,MW_upscaled))+
   geom_area(position="stack",aes(fill=Legend))+
   labs(title="[Upscaled data] PV output by response category")+
   theme(legend.position="bottom")+
   xlab("Time")+
   ylab("Power (MW)")+
   geom_vline(aes(xintercept=t0),size=0.9,colour="black",linetype="dashed")+
-  sapply(tx,function(tx)geom_vline(aes(xintercept=tx),size=0.9,colour="red",linetype="dashed"))
+  sapply(tx,function(tx)geom_vline(aes(xintercept=tx),size=0.9,colour="red",linetype="dashed"))+
+  scale_fill_manual(values=AEMOCpp)
+
 
 # plot(p4)
 
@@ -150,6 +157,24 @@ p6 <- ggplot(temp.plot, aes(zone,perc_disc,colour=Standard_Version))+
   ylim(limits = c(0, 100))
 
 
+temp.plot7 <- temp.sample %>% 
+  group_by(zone, response_category) %>% 
+  summarise(d=sum(count)) %>% 
+  spread(response_category, d)
+temp.plot7[is.na(temp.plot7)] <- 0
+temp.plot7 <- temp.plot7 %>% 
+  mutate(Total = sum(Curtail+Disconnect+Ride_Through)) %>% 
+  mutate(perc_disc= 100*Disconnect/Total) %>% 
+  mutate(lab = paste0("n=",Total))
+
+
+p7 <- ggplot(temp.plot7, aes(zone,perc_disc))+
+  geom_bar(stat="identity",position="dodge", aes(fill="salmon1"), show.legend=FALSE)+
+  labs(title="Percentage of PV that disconnected by zone",
+       subtitle="'n' indicates the sample size for each zone")+
+  ylab("Percentage of sites in zone that disconnected (%)")+
+  xlab(NULL)+
+  geom_text(aes(label=lab),position=position_dodge(width=1),vjust=-.5,size=3)
 
 # plot(p6)
 
@@ -173,6 +198,7 @@ ggsave(p3,file=paste0("plot_3_",savetime,".png"))
 ggsave(p4,file=paste0("plot_4_",savetime,".png"))
 ggsave(p5,file=paste0("plot_5_",savetime,".png"))
 ggsave(p6,file=paste0("plot_6_",savetime,".png"))
+ggsave(p7,file=paste0("plot_7_",savetime,".png"))
 
 # rm(p1)
 rm(p2)
@@ -180,7 +206,7 @@ rm(p3)
 rm(p4)
 rm(p5)
 rm(p6)
-
+rm(p7)
 ################### end ####
 
 
