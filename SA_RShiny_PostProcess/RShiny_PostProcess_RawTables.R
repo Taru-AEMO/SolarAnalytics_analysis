@@ -324,6 +324,10 @@ table_5 <- rbind( temp.table1, append(c(Standard_Version="Total"),
 rm(list=ls(pattern="temp"))
 
 
+
+
+
+
 ##### 3 save outputs ####
 setwd(paste0("",directory,"/PP_output_",event_date,""))
 
