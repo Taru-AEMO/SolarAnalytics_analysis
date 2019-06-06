@@ -2,9 +2,6 @@
 ##### this script is for finding the % at which PV is generating as a specific time, i.e. time of disturbance
 
 
-
-##### don't load "chron" packages because it interfers with this script/lubridate #####
-
 library("stringr")
 library("plyr")
 library("RODBC")
@@ -27,6 +24,8 @@ con <- odbcConnect("WARE", uid = "", pwd = "")
 ####### if the postcode is not known input the subregion
 ####### please follow naming conventions: TAS / TASSOUTH / TASNORTH / QLD / QLDSOUTH / QLDNORTH / QLDCENTRAL / VIC / NSW / SA
 
+if(!exists("PV_search")){
+
 setwd("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/input/")
 
 temp.events.csv <- read.csv("events_list_input.csv", header=TRUE)
@@ -38,7 +37,10 @@ temp.events <- temp.events.csv%>%
          ts=dmy_hms(time_date,tz="Australia/Brisbane"),
          region=as.character(region),
          postcode=as.numeric(postcode))
-
+}else{
+  temp.events <- PV_search
+  
+}
 
 input.events <- rownames(temp.events)
 temp.events <- cbind(event.id=input.events, temp.events)
@@ -56,7 +58,10 @@ temp.event <- temp.events%>%
 
 #### change region format for the sql
 
-if(is.na(temp.event$postcode)==FALSE){
+temp.all.regions <- as.factor(c("SA1","VIC1","NSW1","QLDSOUTH","QLDCENTRAL","QLDNORTH","TASNORTH","TASSOUTH"))
+
+
+if(!is.na(temp.event$postcode)){
   
 temp.event <- temp.event%>%
   mutate(region_sql=ifelse(postcode<=2999 & postcode>=2000,"NSW1",
@@ -64,10 +69,11 @@ temp.event <- temp.event%>%
                 ifelse(postcode<=5999 & postcode>=5000,"SA1",
                        ifelse(postcode<=4999 & postcode>=4703,"QLDNORTH",
                               ifelse(postcode<=4702 & postcode>=4601,"QLDCENTRAL",
-                                     ifelse(postcode<=4600 & postcode>=4000,"QLDSOUTH","no valid postcode")))))))
+                                     ifelse(postcode<=4600 & postcode>=4000,"QLDSOUTH","not_valid")))))))
 
-} else if(is.na(temp.event$region)==FALSE){
+} else if(!is.na(temp.event$region)){
 
+  
 temp.event <- temp.event%>%
   mutate(region_sql=ifelse(region=="SA","SA1",
                                  ifelse(region=="VIC","VIC1",
@@ -77,10 +83,22 @@ temp.event <- temp.event%>%
                                                              ifelse(region=="QLDNORTH",region,
                                                                     ifelse(region=="TASNORTH",region,
                                                                            ifelse(region=="TASSOUTH",region,
-                                                                                  ("no valid region"))))))))))
+                                                                                  "not_valid")))))))))
+} else {
+  
+  temp.trial <- sapply(temp.all.regions,function(x){
+    mutate(temp.event,region_sql=x)
+  },simplify = FALSE)
+  
+  temp.event <- NULL
+  temp.event <- bind_rows(temp.trial) %>% 
+    mutate(region=NA)
+  
+  print("Searching for all regions")
+
+  
 }
-
-
+  
 
 ####
 
@@ -126,7 +144,8 @@ temp.capacities <- temp.capacities%>%
 
 
 ####################################### "HH Daily Actual"
-sql1 = sprintf("select r.site,
+results <- sapply(Region,function(x){
+sql1 <- sprintf("select r.site,
                r.vtime,
                r.powermean as \"HH Daily Actual\"
                from anemos.act_sgupv_pred r,
@@ -174,7 +193,7 @@ sql1 = sprintf("select r.site,
                )
                and r.areaid in ('%s')
                )
-               order by r.site, r.vtime",Pre_EventTime,Post_EventTime,Region)
+               order by r.site, r.vtime",Pre_EventTime,Post_EventTime,x)
 
 
 #Run Query # If fails no error is returned
@@ -195,32 +214,34 @@ mw <- temp.gen$`HH Daily Actual`
 
 ########## find PV capacity for that event/region
 
-re <- temp.event$region_sql
+# re <- temp.event$x
 
 temp.cap <- temp.capacities%>%
-  filter(region==re)
+  filter(region==x)
 
 cap <- as.numeric(temp.cap$cap_MW)
 
 ##########create data frame summary
 
 temp.output <- temp.event%>%
-  select(date,time,postcode,region,ts)%>%
+  select(date,time,postcode,region,region_sql,ts)%>%
+  filter(region_sql==x) %>% 
   mutate(MW_generating=mw,
          MW_installed_region=cap,
-         Capacity_generating=MW_generating/MW_installed_region)
+         Capacity_generating=MW_generating/MW_installed_region)},simplify = FALSE)
 
+temp.output <- bind_rows(results)
 
 output <- bind_rows(output,temp.output)
 
 ############# end loop
 }
 
-
+PV_search_results <- output
 ########## csv output
 
-setwd("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/")
-write.csv(output,gsub(":","",paste0("events_list_PVcap_output_",Sys.time(),".csv")))
+# setwd("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/output/")
+# write.csv(output,gsub(":","",paste0("events_list_PVcap_output_",Sys.time(),".csv")))
 
 rm(list=ls(pattern="temp."))
 
