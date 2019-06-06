@@ -127,7 +127,28 @@ temp.group <- temp.sample %>%
   filter(response_category=="Disconnect") %>% 
   mutate(key=paste0(Standard_Version,"_",zone))
 
-temp.group2 <- temp.sample %>% 
+
+###
+#### create n=0 frame so that the plots will show where n=0
+temp.zones <- unique(temp.sample$zone)
+
+temp.n0 <- sapply(temp.zones,function(x){
+
+       temp.bind <-  data.frame(c_id=c(1,2,3),
+                      Standard_Version=as.factor(c("AS4777.3:2005", "Transition", "AS4777.2:2015")),
+                      zone=x,
+                      response_category=as.character("null"),
+                      count=0)
+  
+  bind_rows(temp.bind)},simplify=FALSE)
+
+temp.n0 <- bind_rows(temp.n0)
+
+temp.test <- bind_rows(temp.n0,temp.sample)
+
+##
+
+temp.group2 <- temp.test %>% 
   group_by(Standard_Version,zone) %>% 
   summarise(n=sum(count)) %>% 
   ungroup() %>% 
