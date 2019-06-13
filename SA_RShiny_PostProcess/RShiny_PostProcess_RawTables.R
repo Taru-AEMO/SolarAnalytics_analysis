@@ -262,9 +262,18 @@ temp.doubles <- temp.sample%>%
 }
 
 ## filter for standard version, size, and response of each circuit ID
-unique_list <- unique(select(pp_ud,c_id,Standard_Version,Grouping,response_category)) %>% 
+unique_list <- unique(select(pp_ud,site_id,c_id,s_state,s_postcode,sum_ac,
+                             Standard_Version,Grouping,response_category,
+                             manufacturer,
+                             model,lat,lon)) %>% 
   mutate(response_category=gsub("-","_",response_category),
          count=1)
+
+## for saving: list of each site and their response
+save.list <- select(unique_list,-count) %>% 
+  arrange(site_id)
+
+unique_list <- select(unique_list,c_id,Standard_Version,Grouping,response_category,count)
 
 ## rearrange, count, and create table 3
 table_3 <- unique_list %>% 
@@ -331,6 +340,8 @@ rm(list=ls(pattern="temp"))
 ##### 3 save outputs ####
 setwd(paste0("",directory,"/PP_output_",event_date,""))
 
+
+write.csv(save.list,file=paste0("Site_response_list_",event_date,".csv"))
 
 
 sink(paste0("All_Raw_Tables_",savetime,".csv"))

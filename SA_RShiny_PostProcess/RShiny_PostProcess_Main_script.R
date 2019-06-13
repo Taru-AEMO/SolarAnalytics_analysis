@@ -10,12 +10,14 @@ library("gridExtra")
 setwd("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/SA_RShiny_PostProcess")
 source("AEMOtemplate_format.R")
 ################ set directory for all inputs / outputs
+directory <- "~/DER_disturbance_analysis/20180906"
 directory <- "~/DER_disturbance_analysis/VIC 20190303"
 
 #
 setwd(paste0("",directory,""))
 ################# set inputs
 ## save short underlying data from r shiny ______ this file is used for all plots of minutes/hour near event
+# underlying_data_file <- "NSW_ud_1243_5.csv"
 underlying_data_file <- "VIC_ud_151155_5.csv"
 
 
