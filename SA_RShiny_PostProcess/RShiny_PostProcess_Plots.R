@@ -207,19 +207,45 @@ rm(list=ls(pattern="temp"))
 #For the site performance factor start with pp_ar dataframe
 
 #For the cumulative disconnects, start with pp_ud dataframe
+## plot 8 ## cumulative disconnects by standard ####
 
+#Find all unique circuit IDs that have a postcode
+temp.plot8 <- pp_ud[!is.na(pp_ud$s_postcode),]
+temp.plot8 <- distinct(temp.plot8, c_id, .keep_all=TRUE)
+
+#Create new columns to indicate number of sites and number of disconnections by standard version and postcode
+temp.plot8 <- mutate(temp.plot8, cum_system_count=cumsum(system_count))
+temp.plot8 <- mutate(temp.plot8, percentage=cum_num_disconnects/cum_system_count)
+
+# plot p8  
+p8 <- ggplot(temp.plot8, aes(x=distance,y=percentage,colour=Standard_Version))+
+  geom_point()+
+  xlab("Distance from event (km)")+
+  ylab("Cumlative  disconnects")+
+  labs(title="Percentage of PV that disconnected as a percentage of zone/standard groups")+
+  geom_vline(aes(xintercept=zone1),size=0.9,colour="black",linetype="dashed")+
+  geom_vline(aes(xintercept=zone2),size=0.9,colour="black",linetype="dashed")+
+  geom_vline(aes(xintercept=zone3),size=0.9,colour="black",linetype="dashed")+
+  ylim(limits = c(0, 1))+
+  scale_colour_manual(values=AEMOCpp)
+
+
+#plot(p8)
+
+## remove temps
+rm(list=ls(pattern="temp"))
 
 
 ##### 6. save outputs ####
 setwd(paste0("",directory,"/PP_output_",event_date,""))
 
-# ggsave(p1,file=paste0("plot_1",savetime,".png"), width = 9, height = 6)
-ggsave(p2,file=paste0("plot_2_",savetime,".png"), width = 9, height = 6)
-ggsave(p3,file=paste0("plot_3_",savetime,".png"), width = 9, height = 6)
-ggsave(p4,file=paste0("plot_4_",savetime,".png"), width = 9, height = 6)
-ggsave(p5,file=paste0("plot_5_",savetime,".png"), width = 9, height = 6)
-ggsave(p6,file=paste0("plot_6_",savetime,".png"), width = 9, height = 6)
-ggsave(p7,file=paste0("plot_7_",savetime,".png"), width = 9, height = 6)
+ggsave(p2,file=paste0("plot_2_",savetime,".png"),height =7, width =10)
+ggsave(p3,file=paste0("plot_3_",savetime,".png"),height =7, width =10)
+ggsave(p4,file=paste0("plot_4_",savetime,".png"),height =7, width =10)
+ggsave(p5,file=paste0("plot_5_",savetime,".png"),height =7, width =10)
+ggsave(p6,file=paste0("plot_6_",savetime,".png"),height =7, width =10)
+ggsave(p7,file=paste0("plot_7_",savetime,".png"),height =7, width =10)
+ggsave(p8,file=paste0("plot_8_",savetime,".png"),height =7, width =10)
 
 # rm(p1)
 rm(p2)
