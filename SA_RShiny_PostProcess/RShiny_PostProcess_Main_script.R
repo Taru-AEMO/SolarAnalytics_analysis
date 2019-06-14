@@ -11,14 +11,16 @@ setwd("~/GitHub/DER_Event_analysis/SolarAnalytics_analysis/SA_RShiny_PostProcess
 source("AEMOtemplate_format.R")
 ################ set directory for all inputs / outputs
 directory <- "~/DER_disturbance_analysis/20180906"
-directory <- "~/DER_disturbance_analysis/VIC 20190303"
+
 
 #
 setwd(paste0("",directory,""))
 ################# set inputs
 ## save short underlying data from r shiny ______ this file is used for all plots of minutes/hour near event
-# underlying_data_file <- "NSW_ud_1243_5.csv"
-underlying_data_file <- "VIC_ud_151155_5.csv"
+underlying_data_file <- "NSW_ud_1243_5.csv"
+underlying_data_file <- "QLD_ud_1243_5.csv"
+underlying_data_file <- "SA_ud_1243_5.csv"
+underlying_data_file <- "VIC_ud_1243_5.csv"
 
 
 ## save long underlying data from r shiny ______ this file is used for one plot and must include time series for entire day
@@ -26,18 +28,21 @@ underlying_data_file <- "VIC_ud_151155_5.csv"
 
 
 ## toggle upscaled data and save aggregated results from r shiny
-upscaled_aggregated_file <- "VIC_upscaled_151155_5.csv"
+upscaled_aggregated_file <- "NSW_upscaled_1243_5.csv"
+upscaled_aggregated_file <- "QLD_upscaled_1243_5.csv"
+upscaled_aggregated_file <- "SA_upscaled_1243_5.csv"
+upscaled_aggregated_file <- "VIC_upscaled_1243_5.csv"
 
 
 
 ####### event data, only one t0 can be input per analysis. multiple events can be input.
 ###### don't deviate from formats
-event_date <- "20190303"
+event_date <- "20180906"
 
 ### t0 is the interval immediately prior to event <-- must match exact time stamp in data
-pre_event_interval <- "15:11:55"
+pre_event_interval <- "12:43:55"
 
-event_time <- c("15:13:55")
+event_time <- c("12:44:55")
 
 
 

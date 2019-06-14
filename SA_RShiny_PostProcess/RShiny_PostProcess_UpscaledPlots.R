@@ -93,10 +93,10 @@ p4 <- ggplot(temp.plot4, aes(x=Standard_Version))+
 ##### 6. save outputs ####
 setwd(paste0("",directory,"/PP_output_",event_date,""))
 
-ggsave(p1,file=paste0("plot_1_upscale_",savetime,".png"))
-ggsave(p2,file=paste0("plot_2_upscale_",savetime,".png"))
-ggsave(p3,file=paste0("plot_3_upscale_",savetime,".png"))
-ggsave(p4,file=paste0("plot_4_upscale",savetime,".png"))
+ggsave(p1,file=paste0("plot_1_upscale_",savetime,".png"),height =7, width =10)
+ggsave(p2,file=paste0("plot_2_upscale_",savetime,".png"),height =7, width =10)
+ggsave(p3,file=paste0("plot_3_upscale_",savetime,".png"),height =7, width =10)
+ggsave(p4,file=paste0("plot_4_upscale",savetime,".png"),height =7, width =10)
 # ggsave(p5,file=paste0("plot_5_",savetime,".png"))
 # ggsave(p6,file=paste0("plot_6_",savetime,".png"))
 
