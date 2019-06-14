@@ -44,6 +44,10 @@ pre_event_interval <- "12:43:55"
 
 event_time <- c("12:44:55")
 
+###set zones for plot 8 (km)
+zone1 = 50
+zone2 = 200
+zone3 = 450
 
 
 ######
