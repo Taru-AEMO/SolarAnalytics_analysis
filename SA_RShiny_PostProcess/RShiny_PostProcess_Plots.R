@@ -206,7 +206,6 @@ rm(list=ls(pattern="temp"))
 ####HEY ELOISE START PLOTTING THE CHARTS HERE :)
 #For the site performance factor start with pp_ar dataframe
 
-#For the cumulative disconnects, start with pp_ud dataframe
 ## plot 8 ## cumulative disconnects by standard ####
 
 #Find all unique circuit IDs that have a postcode
@@ -214,6 +213,15 @@ temp.plot8 <- pp_ud[!is.na(pp_ud$s_postcode),]
 temp.plot8 <- distinct(temp.plot8, c_id, .keep_all=TRUE)
 
 #Create new columns to indicate number of sites and number of disconnections by standard version and postcode
+temp.plot8 <- mutate(temp.plot8, num_disconnects=ifelse(response_category=="Disconnect",1,0))
+temp.plot8 <- mutate(temp.plot8, system_count=1)
+temp.plot8 <- temp.plot8[order(temp.plot8$distance),]
+temp.plot8 <- group_by(temp.plot8, Standard_Version, s_postcode)
+temp.plot8 <- summarise(temp.plot8, distance=first(distance), num_disconnects=sum(num_disconnects),
+                        system_count=sum(system_count))
+#Create new columns to sum up cumulative disconnections and systems by distance from event and convert to percentage
+temp.plot8 <- temp.plot8[order(temp.plot8$distance),]
+temp.plot8 <- mutate(temp.plot8,cum_num_disconnects=cumsum(num_disconnects))
 temp.plot8 <- mutate(temp.plot8, cum_system_count=cumsum(system_count))
 temp.plot8 <- mutate(temp.plot8, percentage=cum_num_disconnects/cum_system_count)
 
