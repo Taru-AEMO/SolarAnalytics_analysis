@@ -203,9 +203,6 @@ p7 <- ggplot(temp.plot7, aes(zone,perc_disc))+
 rm(list=ls(pattern="temp"))
 
 
-####HEY ELOISE START PLOTTING THE CHARTS HERE :)
-#For the site performance factor start with pp_ar dataframe
-
 ## plot 8 ## cumulative disconnects by standard ####
 
 #Find all unique circuit IDs that have a postcode
@@ -234,14 +231,57 @@ p8 <- ggplot(temp.plot8, aes(x=distance,y=percentage,colour=Standard_Version))+
   geom_vline(aes(xintercept=zone1),size=0.9,colour="black",linetype="dashed")+
   geom_vline(aes(xintercept=zone2),size=0.9,colour="black",linetype="dashed")+
   geom_vline(aes(xintercept=zone3),size=0.9,colour="black",linetype="dashed")+
-  ylim(limits = c(0, 1))+
   scale_colour_manual(values=AEMOCpp)
 
 
-#plot(p8)
+plot(p8)
 
 ## remove temps
 rm(list=ls(pattern="temp"))
+
+
+#Plot 9 site performance factor ####
+
+#trim dataset to time near event and create a key for stnadard version/ response category
+temp.plot9 <- pp_ud %>%
+  filter(ts>(t0-minutes(5)) & ts <(t0+minutes(15))) %>%
+  mutate(key=paste0(Standard_Version,"_",response_category))
+
+#aggregate circuit output to the site-id level and calculate performance factor for each site/time
+temp.plot9 <- temp.plot9 %>%
+  group_by(ts, site_id, key ,sum_ac) %>%
+  summarise(site_performance_factor=sum(power_kW)) %>%
+  mutate(site_performance_factor=(site_performance_factor/sum_ac))
+
+#find performance factor at the pre-event interval to use for normalising (next step)
+temp.plot9a <- temp.plot9 %>%
+  filter(ts == t0) %>%
+  mutate(event_site_performance_factor = site_performance_factor)
+
+#normalise all aite factors to the pre-event interval 
+temp.plot9 <- temp.plot9 %>%
+  left_join(select(temp.plot9a, site_id, ts, key, event_site_performance_factor), by=c("site_id")) %>%
+  select(ts=ts.x, site_id, key=key.x, site_performance_factor, event_site_performance_factor) %>%
+  mutate(Event_Normalised_Power_kW=ifelse(event_site_performance_factor>0.00001,
+                                          site_performance_factor/event_site_performance_factor, NA))
+
+#find averages for Standard version/resounse category for graphing
+temp.plot9 <- temp.plot9 %>%
+  group_by(ts, key) %>%
+  summarise(Average_Event_Normalised_Power_kW=mean(Event_Normalised_Power_kW))
+
+
+#create p9 plot
+p9 <-  ggplot(temp.plot9, aes(ts, Average_Event_Normalised_Power_kW, colour = key))+
+  geom_line()+
+  xlab("Time")+
+  ylab("Average site performance factor \n normalised to value of pre-event interval")
+
+#plot(p9)
+
+## remove temps
+rm(list=ls(pattern="temp"))
+
 
 
 ##### 6. save outputs ####
@@ -254,6 +294,8 @@ ggsave(p5,file=paste0("plot_5_",savetime,".png"),height =7, width =10)
 ggsave(p6,file=paste0("plot_6_",savetime,".png"),height =7, width =10)
 ggsave(p7,file=paste0("plot_7_",savetime,".png"),height =7, width =10)
 ggsave(p8,file=paste0("plot_8_",savetime,".png"),height =7, width =10)
+ggsave(p9,file=paste0("plot_9_",savetime,".png"),height =7, width =10)
+
 
 # rm(p1)
 rm(p2)
@@ -262,6 +304,8 @@ rm(p4)
 rm(p5)
 rm(p6)
 rm(p7)
+rm(p8)
+rm(p9)
 ################### end ####
 
 
