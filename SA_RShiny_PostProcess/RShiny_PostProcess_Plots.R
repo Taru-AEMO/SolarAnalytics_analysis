@@ -232,9 +232,10 @@ p8 <- ggplot(temp.plot8, aes(x=distance,y=percentage,colour=Standard_Version))+
   geom_vline(aes(xintercept=zone2),size=0.9,colour="black",linetype="dashed")+
   geom_vline(aes(xintercept=zone3),size=0.9,colour="black",linetype="dashed")+
   scale_colour_manual(values=AEMOCpp)
+#ensure origin is visible on graph
+p8 <- p8 + expand_limits(x = 0, y = 0)
 
-
-plot(p8)
+# plot(p8)
 
 ## remove temps
 rm(list=ls(pattern="temp"))
@@ -260,8 +261,8 @@ temp.plot9a <- temp.plot9 %>%
 
 #normalise all site factors to the pre-event interval 
 temp.plot9 <- temp.plot9 %>%
-  left_join(select(temp.plot9a, site_id, ts, key, event_site_performance_factor), by=c("site_id")) %>%
-  select(ts=ts.x, site_id, key=key.x, site_performance_factor, event_site_performance_factor) %>%
+  left_join(select(temp.plot9a, site_id, key, ts, event_site_performance_factor), by=c("site_id","key")) %>%
+  select(ts=ts.x, site_id, key, site_performance_factor, event_site_performance_factor) %>%
   mutate(Event_Normalised_Power_kW=ifelse(event_site_performance_factor>0.00001,
                                           site_performance_factor/event_site_performance_factor, NA))
 
@@ -277,7 +278,7 @@ p9 <-  ggplot(temp.plot9, aes(ts, Average_Event_Normalised_Power_kW, colour = ke
   xlab("Time")+
   ylab("Average site performance factor \n normalised to value of pre-event interval")
 
-#plot(p9)
+# plot(p9)
 
 ## remove temps
 rm(list=ls(pattern="temp"))
