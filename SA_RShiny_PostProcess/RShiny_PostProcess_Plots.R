@@ -242,7 +242,7 @@ rm(list=ls(pattern="temp"))
 
 #Plot 9 site performance factor ####
 
-#trim dataset to time near event and create a key for stnadard version/ response category
+#trim dataset to time near event and create a key for standard version/ response category
 temp.plot9 <- pp_ud %>%
   filter(ts>(t0-minutes(5)) & ts <(t0+minutes(15))) %>%
   mutate(key=paste0(Standard_Version,"_",response_category))
@@ -258,14 +258,14 @@ temp.plot9a <- temp.plot9 %>%
   filter(ts == t0) %>%
   mutate(event_site_performance_factor = site_performance_factor)
 
-#normalise all aite factors to the pre-event interval 
+#normalise all site factors to the pre-event interval 
 temp.plot9 <- temp.plot9 %>%
   left_join(select(temp.plot9a, site_id, ts, key, event_site_performance_factor), by=c("site_id")) %>%
   select(ts=ts.x, site_id, key=key.x, site_performance_factor, event_site_performance_factor) %>%
   mutate(Event_Normalised_Power_kW=ifelse(event_site_performance_factor>0.00001,
                                           site_performance_factor/event_site_performance_factor, NA))
 
-#find averages for Standard version/resounse category for graphing
+#find averages for Standard version/response category for graphing
 temp.plot9 <- temp.plot9 %>%
   group_by(ts, key) %>%
   summarise(Average_Event_Normalised_Power_kW=mean(Event_Normalised_Power_kW))
