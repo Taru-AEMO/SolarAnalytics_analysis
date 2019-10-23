@@ -167,7 +167,8 @@ temp.plot$lab <- paste0("n=",temp.plot$n)
 
 p6 <- ggplot(temp.plot, aes(zone,perc_disc,colour=Standard_Version))+
   geom_bar(stat="identity",position="dodge",aes(fill=Standard_Version))+
-  scale_fill_manual(values=c("salmon1","slateblue2","seagreen3"))+
+  scale_fill_manual(values=AEMOCpp)+
+  # scale_fill_manual(values=c("salmon1","slateblue2","seagreen3"))+
   labs(title="Percentage of PV that disconnected as a percentage of zone/standard groups",
        subtitle="'n' indicates the sample size for each zone/standard group")+
   ylab("Percentage of sites in sample that disconnected (%)")+
@@ -190,7 +191,8 @@ temp.plot7 <- temp.plot7 %>%
 
 
 p7 <- ggplot(temp.plot7, aes(zone,perc_disc))+
-  geom_bar(stat="identity",position="dodge", aes(fill="salmon1"), show.legend=FALSE)+
+  geom_bar(stat="identity",position="dodge", aes(fill="#360F3C"), show.legend=FALSE)+
+  scale_fill_manual(values=AEMOCpp)+
   labs(title="Percentage of PV that disconnected by zone",
        subtitle="'n' indicates the sample size for each zone")+
   ylab("Percentage of sites in zone that disconnected (%)")+
@@ -271,10 +273,14 @@ temp.plot9 <- temp.plot9 %>%
   group_by(ts, key) %>%
   summarise(Average_Event_Normalised_Power_kW=mean(Event_Normalised_Power_kW))
 
+#colours for plot 9
+getPalette = grDevices::colorRampPalette(c("#360F3C", "#C41230", "#F37421", "#FFC222"))
+colourCount = length(unique(temp.plot9$key))
 
 #create p9 plot
 p9 <-  ggplot(temp.plot9, aes(ts, Average_Event_Normalised_Power_kW, colour = key))+
   geom_line()+
+  scale_colour_manual(values = getPalette(colourCount))+
   xlab("Time")+
   ylab("Average site performance factor \n normalised to value of pre-event interval")
 
