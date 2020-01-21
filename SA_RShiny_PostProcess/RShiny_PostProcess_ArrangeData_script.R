@@ -83,18 +83,18 @@ if(length(upscaled_aggregated_file)>0){
 
 ## find % response of each standard
 temp.pp_ud <- pp_ud %>% 
-  select(ts,power_kW,Standard_Version,response_category) %>% 
+  select(ts,power_kW,site_performance_factor,Standard_Version,response_category) %>% 
   mutate(key=paste0(Standard_Version,"_",response_category))
 
-temp.aggregate <- aggregate(power_kW ~ ts + Standard_Version + response_category, temp.pp_ud, sum) %>% 
+temp.aggregate <- aggregate(site_performance_factor ~ ts + Standard_Version + response_category, temp.pp_ud, sum) %>% 
   mutate(key=paste0(ts,"_",Standard_Version))
 
-temp.aggregate2 <- aggregate(power_kW ~ ts + Standard_Version, temp.pp_ud, sum) %>% 
+temp.aggregate2 <- aggregate(site_performance_factor ~ ts + Standard_Version, temp.pp_ud, sum) %>% 
   mutate(key=paste0(ts,"_",Standard_Version))
 
 temp.join <- left_join(temp.aggregate,temp.aggregate2,by="key") %>% 
   select(ts=ts.x,key,response_category,Standard_Version=Standard_Version.y,
-         res.power=power_kW.x,total.power=power_kW.y) %>% 
+         res.power=site_performance_factor.x,total.power=site_performance_factor.y) %>% 
   mutate(perc_response=res.power/total.power)
 
 ## times % response by upscaled standard output
